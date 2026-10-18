@@ -1,23 +1,30 @@
 # Instruções do projeto — Bolão Copa FIFA 2027
 
-## Contexto e fontes
-Este repositório prepara um sistema web de bolão para um único grupo da Copa do Mundo Feminina da FIFA Brasil 2027. A fonte canônica do produto é [`docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md) (v3.2, 18/10/2026). Consulte também [`docs/architecture/arquitetura-software.md`](docs/architecture/arquitetura-software.md), que registra recomendações arquiteturais e decisões pendentes; ela não substitui os requisitos.
+## Contexto e precedência
 
-Precedência: requisitos aprovados → decisões de produto confirmadas → decisões arquiteturais formalmente aprovadas → especificações OpenSpec aprovadas dentro desses limites → instruções pontuais compatíveis → documentação técnica e boas práticas. Uma solicitação pontual não autoriza alterar silenciosamente regras aprovadas. Se houver conflito, ausência de informação ou decisão de negócio em aberto, descreva o conflito, proponha opções e peça decisão humana antes de implementar a parte afetada.
+Este repositório prepara um bolão web para um grupo único da Copa do Mundo Feminina da FIFA Brasil 2027. A fonte normativa do produto é [`docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md), v3.2 (18/10/2026). Consulte os documentos especializados antes de decidir ou alterar a área correspondente; links aqui são referências, não conteúdo carregado automaticamente.
 
-## Direção arquitetural
-A direção técnica é desenvolvimento local via Docker Compose, com Next.js/TypeScript, Python/FastAPI e PostgreSQL em serviços separados; versões ainda serão selecionadas. Windows 11 com WSL 2/Ubuntu é ambiente suportado a validar. A arquitetura recomendada é monólito modular, com DDD pragmático, Clean Architecture e organização por funcionalidades, sem abstrações desnecessárias. Produção não é presumida como idêntica ao ambiente local; GCP é apenas possibilidade de portabilidade, sem implantação ou gestão no escopo. O processo SDD é obrigatório e deve usar OpenSpec para especificação, planejamento e evolução, com governança e aprovações humanas. Consulte a arquitetura e os registros de decisões antes de propor estrutura, dependências ou operação; propostas arquiteturais não aprovadas não prevalecem sobre requisitos.
+Precedência: requisitos aprovados → decisões de produto confirmadas → decisões arquiteturais formalmente aprovadas → especificações OpenSpec aprovadas dentro desses limites → solicitações pontuais compatíveis → recomendações técnicas. Solicitação pontual ou artefato OpenSpec completo não altera regra nem substitui aprovação humana. Em conflito ou lacuna, registre fontes, alternativas e impacto e peça decisão antes de implementar comportamento dependente.
 
-## Regras de segurança e produto
-- Não exponha palpites de terceiros antes do encerramento da janela, nem confie na interface para impor autorização ou prazo; validação deve ocorrer no backend.
-- Preserve as regras aprovadas de pontuação, corte de uma hora, privacidade, horário de Brasília e placar eliminatório ao fim de 120 minutos (sem gols de pênaltis). Mudança oficial de kickoff pode reabrir a janela: durante a reabertura, escritas são permitidas até o novo corte e novas leituras de palpites alheios ficam ocultas; divulgação já observada não tem confidencialidade restaurada. Não invente política para situações não especificadas.
-- Proteja credenciais, sessões, tokens de recuperação e dados pessoais; não inclua segredos ou dados pessoais em código, documentação ou logs. Operações administrativas devem ter autorização e trilha de auditoria.
-- Use privilégios mínimos, validação de entrada e consultas parametrizadas. Documente controles propostos sem alegar conformidade normativa não verificada.
+## Direção e limites essenciais
 
-## Qualidade e fluxo de trabalho
-Faça mudanças pequenas e revisáveis. Use OpenSpec no fluxo SDD obrigatório para especificar, planejar e evoluir mudanças; artefatos completos não substituem aprovação humana quando necessária. Precedência: requisitos aprovados → decisões de produto confirmadas → decisões arquiteturais aprovadas → especificações OpenSpec aprovadas dentro desses limites. Registre rastreabilidade entre fonte/versão, delta, tarefas e validação; consulte primeiro os requisitos e decisões aplicáveis e obtenha aprovação antes de alterar regras de produto. Cubra regras de domínio, autorização, concorrência, idempotência, ranking e migrações com testes proporcionais à mudança; não afirme que testes passaram sem executá-los.
+- Stack e topologia local definidas: Next.js/TypeScript, FastAPI/Python e PostgreSQL em serviços separados via Docker Compose. Desenvolvimento deve suportar Windows 11 com WSL 2/Ubuntu e Linux. Versões, configuração concreta e compatibilidade ainda não estão validadas.
+- Direção arquitetural: monólito modular, DDD pragmático e Clean Architecture, sem abstrações desnecessárias. Detalhes da proposta não são decisões técnicas aprovadas. GCP é apenas possibilidade de portabilidade; implantação e operação em nuvem estão fora do escopo.
+- OpenSpec é obrigatório no SDD, com governança e aprovações humanas. Relacione fonte/versão → delta → tarefas → validação; não trate conclusão dos artefatos como autorização de implementação.
+- Preserve as regras aprovadas: pontuação 6/3/2/1/0; mata-mata pelo placar ao fim de 120 minutos, sem gols de pênaltis; corte uma hora antes do kickoff oficial vigente; BRT (UTC−3); ranking e desempates conforme requisito. O backend impõe prazo e autorização. Alteração oficial do kickoff pode reabrir a janela; durante a reabertura, novas leituras de palpites alheios ficam ocultas, sem restaurar confidencialidade de divulgações já observadas. Não invente política para situações pendentes.
+- Proteja credenciais, sessões, tokens e dados pessoais; não exponha palpites alheios antes do corte. Operações administrativas exigem autorização e auditoria. Use privilégio mínimo, validação e consultas parametrizadas; não alegue conformidade não verificada.
+- Não implemente funcionalidades, instale dependências, altere configurações executáveis ou crie recursos de nuvem sem autorização apropriada. Não opere em produção, não exponha segredos e não faça ações destrutivas sem inspeção e confirmação.
 
-Consulte a documentação oficial correspondente às versões efetivamente selecionadas. Não invente versões, comandos, dependências, scripts ou recursos de infraestrutura. Não crie `AGENTS.md` automaticamente; só o faça quando houver uma necessidade concreta de compatibilidade identificada. No estado atual não há aplicação ou comandos de build/teste documentados.
+## Mapa de consulta (abrir antes de trabalhar)
 
-## Limites operacionais
-Não implemente funcionalidades, não instale dependências, não altere configurações executáveis nem crie recursos de nuvem sem solicitação e aprovação apropriadas. Não realize operações destrutivas ou em produção, não acesse nem publique segredos. Antes de qualquer mudança irreversível, inspecione os alvos e peça confirmação. Registre dúvidas e bloqueios em vez de preencher lacunas com suposições.
+| Tipo de trabalho | Fontes a consultar |
+|---|---|
+| Regra ou comportamento do produto | [Requisitos v3.2](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md) e [decisões/pêndencias](docs/requirements/decisoes-pendentes.md); verificar aprovação e lacunas antes de propor mudança. |
+| Arquitetura, dados, segurança ou operação | [Arquitetura](docs/architecture/arquitetura-software.md) e [revisão arquitetural](docs/architecture/revisao-arquitetura-multiagentes.md); recomendações não aprovadas não prevalecem sobre requisitos. |
+| Badges/gamificação | [PROD-06](docs/requirements/PROD-06-criterios-badges-gamificacao.md); é proposta aguardando aprovação, portanto não implementar concessão automática. |
+| Especificação ou evolução de mudança | [`openspec/config.yaml`](openspec/config.yaml), artifacts existentes em `openspec/` e comandos/skills OpenSpec disponíveis. Preservar governança humana; não inicializar nem mudar configuração sem solicitação. |
+| Instruções de agentes | Este `CLAUDE.md` é o ponto de entrada do Claude Code. Documentos em `docs/` são consultados sob demanda; comandos e skills em `.claude/` aplicam-se quando acionados. Não presuma que arquivos de outras ferramentas ou diretórios não rastreados sejam instruções canônicas. |
+
+## Qualidade e execução
+
+Faça mudanças pequenas e revisáveis. Consulte documentação oficial correspondente às versões selecionadas; não invente versões, comandos, dependências ou scripts. Cubra regras de domínio, autorização, concorrência, idempotência, ranking e migrações com validação proporcional. Não há aplicação nem comandos de build/teste confirmados no repositório; não declare testes executados sem executá-los. Não crie `AGENTS.md` sem necessidade concreta de compatibilidade identificada.

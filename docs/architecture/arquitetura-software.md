@@ -2,10 +2,10 @@
 
 **Versão:** 0.3 (revisão arquitetural recomendada)
 **Elaboração:** 18/10/2026
-**Status:** Arquitetura recomendada para decisão; não equivale a aprovação formal de cada escolha técnica. Restrições definidas pelo escopo atual estão identificadas separadamente.
-**Fonte primária do produto:** requisitos v3.2, de 18/10/2026.
+**Status:** Proposta arquitetural; não equivale a aprovação formal de cada escolha técnica. Restrições definidas para o escopo atual e recomendações ainda sujeitas a aprovação estão identificadas separadamente.
+**Fonte primária do produto:** [requisitos v3.2](../requirements/requisitos-bolao-copa-mundo-feminina-2027.md), de 18/10/2026.
 
-> Este documento recomenda uma arquitetura coerente com o escopo obrigatório; não descreve componentes implementados nem aprova regras de produto. As regras aprovadas permanecem na fonte de requisitos. O desenvolvimento local será via Docker Compose em Windows 11 com WSL 2/Ubuntu ou ambiente Linux; produção não é presumida como idêntica e GCP não está selecionado. O registro canônico de pendências de produto, operação e processo é `docs/requirements/decisoes-pendentes.md`; não há um segundo registro paralelo em `docs/architecture/`.
+> Este documento reúne restrições de escopo e recomendações arquiteturais; não descreve componentes implementados nem aprova regras de produto. As regras aprovadas permanecem na [fonte de requisitos](../requirements/requisitos-bolao-copa-mundo-feminina-2027.md). O desenvolvimento local será via Docker Compose em Windows 11 com WSL 2/Ubuntu ou ambiente Linux; produção não é presumida como idêntica e GCP não está selecionado. O [registro de decisões pendentes](../requirements/decisoes-pendentes.md) é a fonte canônica para pendências de produto, operação e processo; não há registro paralelo nesta arquitetura.
 
 ## 1. Resumo executivo
 
@@ -28,7 +28,7 @@ Incluem-se decisões e recomendações de arquitetura para desenvolvimento local
 ### Fontes do projeto
 
 1. `docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`, versão 3.2, 18/10/2026 — fonte canônica para regras do produto.
-2. `docs/architecture/PROMPT-ARQUITETURA-CLAUDE-CODE.md` — instrução para esta proposta; não é aprovação de decisões técnicas.
+2. Prompt histórico de elaboração arquitetural (preservado no histórico Git anterior à reestruturação documental) — orientou a análise inicial; não é instrução vigente nem aprovação de decisões técnicas.
 3. `docs/requirements/decisoes-pendentes.md` — registro das decisões e lacunas residuais.
 4. `openspec/config.yaml` e estrutura do repositório — configuração `spec-driven`; OpenSpec é obrigatório para especificação, planejamento e evolução SDD neste projeto, com governança manual. Os comentários explicativos foram alinhados nesta atualização documental; não houve alteração do schema nem do comportamento.
 
@@ -85,7 +85,7 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 
 ### Definido na fonte de requisitos
 
-O requisito v3.2 define placar de mata-mata ao final de 120 minutos sem gols de pênaltis, corte de uma hora e semântica de recepção, publicação após conclusão das gravações elegíveis, sete rodadas, pontuação, ranking corrente e ordem dos critérios de desempate, grupo único e escopo excluído. Recuperação por token único de 30 a 60 minutos e resposta anti-enumeração também estão definidos. Não flexibilizar regras por conveniência técnica. Permanecem abertas as políticas para partidas suspensas/abandonadas/retomadas e alguns efeitos de cancelamento, descritos no registro canônico.
+O requisito v3.2 é a fonte normativa para placar de mata-mata ao final de 120 minutos sem gols de pênaltis, corte de uma hora e semântica de recepção, publicação após conclusão das gravações elegíveis, sete rodadas, pontuação, ranking corrente e ordem dos critérios de desempate, grupo único e escopo excluído. Recuperação por token único de 30 a 60 minutos e resposta anti-enumeração também estão definidos. Não flexibilizar regras por conveniência técnica. Permanecem abertas as políticas para partidas suspensas/abandonadas/retomadas e alguns efeitos de cancelamento, descritos no [registro canônico de decisões pendentes](../requirements/decisoes-pendentes.md). Os resumos e exemplos desta arquitetura são contextuais; em caso de divergência, prevalece o requisito aprovado.
 
 ### Direção definida e recomendações
 
@@ -325,14 +325,14 @@ Se transação extensa causar bloqueios, registrar revisão oficial e cálculo p
 
 ### Ranking
 
-Ordem aprovada pelo requisito, com detalhes de aplicação ainda a esclarecer:
+Ordem normativa definida pelo requisito v3.2 (reproduzida abaixo como resumo; ver regra completa na fonte canônica):
 1. pontos totais DESC;
 2. quantidade de palpites de 6 pontos DESC;
 3. quantidade de palpites de 3 pontos DESC;
 4. pontos acumulados em rodadas anteriores DESC, ignorado em R1;
 5. nome de exibição em ordem alfabética após normalização que ignora acentos e caixa; se os nomes normalizados forem iguais, os participantes permanecem empatados.
 
-Armazenar pontuação por participante/partida/versão; agregar por rodada; manter snapshots/projeções reconstruíveis por versão do resultado/cálculo. Não usar ordem de consulta não determinística: calcular chave normalizada com normalização Unicode e regra de locale estável; se todos os critérios de negócio forem iguais, apresentar empate. ID estável pode ordenar linhas tecnicamente de forma repetível sem alterar a classificação oficial.
+Armazenar pontuação por participante/partida/versão; agregar por rodada; manter snapshots/projeções reconstruíveis por versão do resultado/cálculo. Não usar ordem de consulta não determinística: calcular chave normalizada com normalização Unicode e regra de locale estável. Se todos os critérios de negócio forem iguais — inclusive nomes iguais após normalização — apresentar empate; um ID estável pode ordenar linhas tecnicamente de forma repetível, mas não pode alterar a classificação oficial. Detalhes da regra de ranking estão no [requisito v3.2](../requirements/requisitos-bolao-copa-mundo-feminina-2027.md#135-criterios-de-desempate-do-ranking).
 
 O requisito v3.2 define o ranking corrente com base apenas em resultados oficialmente apurados, sem atribuir pontos provisórios ou zero a partidas pendentes. Para o terceiro desempate, uma rodada anterior é concluída quando todas as partidas estão apuradas ou oficialmente canceladas/anuladas; na R1 o critério é ignorado. O último critério normaliza nomes ignorando acentos e caixa; se os valores normalizados forem iguais, os participantes permanecem empatados. Correções em resultados anteriores devem recalcular pontuações derivadas e rankings afetados, preservando a ordem aprovada.
 
@@ -419,7 +419,7 @@ OpenSpec é obrigatório para especificação, planejamento e evolução orienta
 
 Fluxo recomendado, sujeito à formalização do checklist e responsáveis:
 
-1. Ler `CLAUDE.md`, requisito canônico relevante, arquitetura e registro de decisões/pêndencias.
+1. Ler `CLAUDE.md`, o requisito canônico relevante, esta arquitetura e o [registro de decisões pendentes](../requirements/decisoes-pendentes.md).
 2. Criar mudança OpenSpec com problema, origem (IDs/versão dos requisitos e decisões), escopo, fora de escopo e critério de aceite; declarar explicitamente quando não altera regra de produto.
 3. Descrever deltas de especificação sem copiar integralmente o requisito canônico; contradição ou mudança de regra exige decisão/aprovação de produto antes de implementar.
 4. Incluir design quando houver impacto em módulos, dados, segurança, operação ou migrações, e tarefas revisáveis.
@@ -459,10 +459,11 @@ Não estabelecer datas artificiais sem capacidade, responsáveis e prazo aprovad
 
 ## 27. Bloqueios e próxima ação
 
-- **Estado do repositório observado nesta revisão:** há commits Git; documentos e workflows presentes devem ser diferenciados entre rastreados e não rastreados conforme o estado corrente. Não usar snapshots anteriores de Git como fatos permanentes da arquitetura.
+- **Estado do repositório:** o estado de rastreamento é volátil e não constitui decisão arquitetural; consulte Git para o estado atual. A ausência de implementação, configuração local e dados de partidas deve ser reavaliada antes da fundação, não tratada como afirmação permanente.
+
 - **Dados ausentes:** não foram encontrados código de aplicação, Compose/Dockerfiles, manifests, `.env.example`, CI, testes ou dados oficiais de partidas/seleções. Não há decisões arquiteturais formalmente aprovadas registradas por ADR.
 - **Próxima ação recomendada:** resolver pendências de produto/operação antes dos fluxos dependentes e selecionar versões/configuração local antes da fundação. Seguir a revisão em `revisao-arquitetura-multiagentes.md` e o registro canônico de decisões pendentes. Adoção de OpenSpec é obrigatória; convenções de baseline, aprovação e rastreabilidade permanecem pendentes.
 
 ## 28. Escopo desta atualização documental
 
-Esta atualização revisa recomendações arquiteturais e registros documentais. Não implementa funcionalidades, endpoints, telas, migrações, testes ou Compose; não instala dependências, inicializa OpenSpec, altera o schema ou comportamento da configuração OpenSpec, cria recursos de nuvem ou realiza operações destrutivas/em produção. Apenas comentários explicativos em `openspec/config.yaml` foram alinhados à adoção obrigatória. Compatibilidade de runtime não foi testada.
+Esta atualização revisa recomendações arquiteturais e registros documentais. Não implementa funcionalidades, endpoints, telas, migrações, testes ou Compose; não instala dependências, inicializa OpenSpec, altera o schema ou comportamento da configuração OpenSpec, cria recursos de nuvem ou realiza operações destrutivas/em produção. Os comentários explicativos de `openspec/config.yaml` foram alinhados à adoção obrigatória em uma atualização anterior; essa configuração não foi alterada nesta atualização. Compatibilidade de runtime não foi testada.

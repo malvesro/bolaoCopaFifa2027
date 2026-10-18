@@ -204,4 +204,4 @@ Estas questões são complementares às lacunas detalhadas nos itens PROD-01/02/
 
 - [`requisitos-bolao-copa-mundo-feminina-2027.md`](requisitos-bolao-copa-mundo-feminina-2027.md) — fonte canônica de requisitos, v3.2, 18/10/2026.
 - [`../architecture/arquitetura-software.md`](../architecture/arquitetura-software.md) — proposta arquitetural e detalhamento das recomendações técnicas.
-- [`../architecture/PROMPT-ARQUITETURA-CLAUDE-CODE.md`](../architecture/PROMPT-ARQUITETURA-CLAUDE-CODE.md) — escopo da análise arquitetural inicial.
+- [`../architecture/revisao-arquitetura-multiagentes.md`](../architecture/revisao-arquitetura-multiagentes.md) — síntese da revisão documental e arquitetural, sem substituir decisões ou requisitos aprovados.

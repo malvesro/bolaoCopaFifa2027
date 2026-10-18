@@ -9,7 +9,7 @@ PROD-06 — Especificação de Badges e Gamificação
 | Status              | Proposta revisada — aguardando aprovação do responsável pelo produto             |
 | Tipo                | Decisão de produto e especificação funcional                                     |
 | Prioridade          | Média; não bloqueia pontuação ou ranking                                         |
-| Dependências        | Requisitos do bolão, palpites, partidas, resultados oficiais, apuração de pontos |
+| Dependências        | Requisitos do bolão v3.2 (18/10/2026), palpites, partidas, resultados oficiais, apuração de pontos |
 | Arquivo sugerido    | `docs/requirements/PROD-06-criterios-badges-gamificacao.md`                      |
 
 > **Importante:** este documento apresenta uma proposta completa e revisada. Os critérios e os valores numéricos somente se tornam regras aprovadas após confirmação do responsável pelo produto. A implementação automática deve permanecer bloqueada até essa aprovação.
@@ -973,7 +973,7 @@ Os testes devem utilizar dados sintéticos e resultados controlados, sem depende
 As fontes abaixo apoiam princípios de design de gamificação, mas não determinam os critérios específicos deste catálogo. Os limiares e as regras são decisões propostas para o produto.
 
 1. **Impact of Gamification on Motivation and Academic Performance: A Systematic Review (2024).** Revisão sistemática sobre efeitos da gamificação e importância de adaptação e criatividade no desenho das experiências.  
-   [&nbsp;](https://www.mdpi.com/2227-7102/14/6/639)
+   [Artigo na revista Education Sciences](https://www.mdpi.com/2227-7102/14/6/639)
 
 2. **The role of gamified learning strategies in student's motivation in high school and higher education: A systematic review (2023).** Revisão de estratégias de gamificação e efeitos sobre motivação.  
-   https://pmc.ncbi.nlm.nih.gov/articles/PMC10448467
+   [Artigo no PubMed Central](https://pmc.ncbi.nlm.nih.gov/articles/PMC10448467)

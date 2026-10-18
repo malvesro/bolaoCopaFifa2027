@@ -34,7 +34,7 @@ Fontes examinadas: `CLAUDE.md`; requisito v3.2 (incluindo histórico v3.1); prop
 - O repositório contém `openspec/config.yaml` com `schema: spec-driven`; seus comentários devem ser harmonizados com a adoção obrigatória. `openspec/specs/` e `openspec/changes/archive/` não têm conteúdo além de `.gitkeep`; não foram encontrados specs, propostas ativas ou arquivadas.
 - Há scaffolding de instruções/workflows OpenSpec em diretórios de agentes, mas isso não equivale a especificação de produto aprovada nem a execução de CI/testes.
 - Não foram encontrados fonte de aplicação, Docker Compose/Dockerfiles, arquivos de ambiente de exemplo, manifests de dependências, testes, CI ou ADRs.
-- A seção 27 da arquitetura contém um retrato Git obsoleto: diz que não há commits e que arquivos estão sem rastreamento; o checkout atual possui commits e os documentos-base estão versionados. Existem arquivos de workflow não rastreados, portanto não se deve pressupor que todo scaffold local seja canônico.
+- **Observação histórica, checkout inspecionado em 18/10/2026:** a seção 27 da arquitetura registra um retrato do estado Git de uma revisão anterior. Esse retrato é volátil, não uma decisão arquitetural; consulte `git status` para o estado atual. Na revisão desta data havia arquivos de workflow não rastreados, portanto não se deve pressupor que todo scaffold local seja canônico.
 
 ### Restrições desta revisão
 
