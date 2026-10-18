@@ -1,15 +1,15 @@
 # Arquitetura de Software — Bolão da Copa do Mundo Feminina da FIFA Brasil 2027
 
-**Versão:** 0.2 (proposta atualizada)  
-**Elaboração:** 18/10/2026  
-**Status:** Proposta para revisão; não aprovada para implementação.  
-**Fonte primária do produto:** requisitos v3.1, de 18/10/2026.
+**Versão:** 0.3 (revisão arquitetural recomendada)
+**Elaboração:** 18/10/2026
+**Status:** Arquitetura recomendada para decisão; não equivale a aprovação formal de cada escolha técnica. Restrições definidas pelo escopo atual estão identificadas separadamente.
+**Fonte primária do produto:** requisitos v3.2, de 18/10/2026.
 
-> Este documento descreve decisões arquiteturais documentadas, mas não componentes implementados. As regras aprovadas permanecem na fonte de requisitos. O desenvolvimento será local via Docker Compose; implantação e operação em GCP estão fora do escopo. Pendências residuais estão centralizadas em `docs/requirements/decisoes-pendentes.md`.
+> Este documento recomenda uma arquitetura coerente com o escopo obrigatório; não descreve componentes implementados nem aprova regras de produto. As regras aprovadas permanecem na fonte de requisitos. O desenvolvimento local será via Docker Compose em Windows 11 com WSL 2/Ubuntu ou ambiente Linux; produção não é presumida como idêntica e GCP não está selecionado. O registro canônico de pendências de produto, operação e processo é `docs/requirements/decisoes-pendentes.md`; não há um segundo registro paralelo em `docs/architecture/`.
 
 ## 1. Resumo executivo
 
-A topologia de desenvolvimento definida é local, com Docker Compose e serviços separados para frontend Next.js/TypeScript, API FastAPI/Python e PostgreSQL, além de volumes locais para persistência durante o uso. O Dev Container no VS Code pode ser usado, mas não é obrigatório. Volumes locais não constituem backup.
+A topologia local obrigatória é Docker Compose com serviços separados para frontend Next.js/TypeScript, API FastAPI/Python e PostgreSQL, e volumes locais para dados que precisam sobreviver à recriação de containers (incluindo os dados PostgreSQL). O ambiente suportado inclui Windows 11 com Docker Desktop e WSL 2/Ubuntu, além de WSL 2/Linux. O Dev Container no VS Code pode ser usado, mas não é obrigatório. Volumes locais não constituem backup. A configuração ainda não existe e compatibilidade precisa ser verificada.
 
 A arquitetura deve facilitar portabilidade futura ao GCP, mas implantação e gerenciamento de recursos GCP não fazem parte do projeto. Não se prescrevem Cloud Run, Cloud SQL, CI/CD de produção, operação de nuvem, objetivos de recuperação nem serviços gerenciados como entregáveis.
 
@@ -27,14 +27,14 @@ Incluem-se decisões e recomendações de arquitetura para desenvolvimento local
 
 ### Fontes do projeto
 
-1. `docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`, versão 3.1, 18/10/2026 — fonte de verdade para regras do produto.
+1. `docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`, versão 3.2, 18/10/2026 — fonte canônica para regras do produto.
 2. `docs/architecture/PROMPT-ARQUITETURA-CLAUDE-CODE.md` — instrução para esta proposta; não é aprovação de decisões técnicas.
 3. `docs/requirements/decisoes-pendentes.md` — registro das decisões e lacunas residuais.
-4. `openspec/config.yaml` e estrutura do repositório — fornecem configuração inicial `spec-driven`; OpenSpec é a ferramenta sugerida para apoiar o processo SDD leve, com governança manual, sem uso obrigatório.
+4. `openspec/config.yaml` e estrutura do repositório — configuração `spec-driven`; OpenSpec é obrigatório para especificação, planejamento e evolução SDD neste projeto, com governança manual. Os comentários explicativos foram alinhados nesta atualização documental; não houve alteração do schema nem do comportamento.
 
 ### Precedência
 
-Requisitos formalmente aprovados → decisões de produto confirmadas → decisões arquiteturais aprovadas → este documento e solicitações pontuais compatíveis → documentação técnica e boas práticas. Referências técnicas justificam implementação, nunca alteram regra de negócio.
+Requisitos formalmente aprovados → decisões de produto confirmadas → decisões arquiteturais aprovadas → especificações OpenSpec aprovadas dentro desses limites → este documento e solicitações pontuais compatíveis → documentação técnica e boas práticas. Referências técnicas justificam implementação, nunca alteram regra de negócio.
 
 ### Referências técnicas consultadas em 18/10/2026
 
@@ -61,7 +61,7 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 ### Funcionais
 
 - Cadastro, autenticação, alteração e recuperação de senha por e-mail, com token único de duração entre 30 e 60 minutos conforme regra aprovada e resposta que não revela se o e-mail está cadastrado.
-- Palpites inteiros não negativos, editáveis até uma hora antes do início oficial; requisições recebidas no corte/depois são rejeitadas, embora as recebidas antes possam concluir depois; palpites ficam visíveis após o corte a participantes comuns.
+- Palpites inteiros não negativos, editáveis até uma hora antes do kickoff oficial vigente; requisições recebidas no cutoff ou depois são rejeitadas, embora as recebidas antes possam concluir depois. A publicação aguarda gravações elegíveis em andamento; alteração oficial do kickoff pode reabrir a janela, período em que novas consultas alheias ficam ocultas até o novo cutoff.
 - Administração de calendário, seleções/classificação de mata-mata, resultados oficiais e correções auditáveis.
 - Pontuação 6/3/2/1/0, explicação de pontos, ranking com quatro critérios além de pontos totais, visão rodada a rodada, grupos/chaveamento, estatísticas/badges e chamados de suporte.
 
@@ -75,9 +75,9 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 ## 5. Restrições e premissas
 
 - Grupo único; não adicionar tenant/ligas independentes.
-- Stack conceitual: Next.js/TypeScript, FastAPI/Python e PostgreSQL; versões continuam por selecionar. Execução local com Docker Compose está definida. Portabilidade a GCP é uma meta, não compromisso de deployment ou operação.
-- Nenhum código fonte, manifesto de dependências, README, configuração de build, CI ou dado oficial de partidas foi encontrado. Não existem comandos de build/teste confirmados.
-- OpenSpec possui configuração `schema: spec-driven` e é a ferramenta sugerida para apoiar o processo SDD leve; sua utilização não é obrigatória, a governança permanece manual e o checklist ainda será detalhado.
+- Stack obrigatória neste escopo: Next.js/TypeScript, FastAPI/Python e PostgreSQL, em serviços separados no Docker Compose local. Versões continuam por selecionar. Windows 11 com Docker Desktop/WSL 2/Ubuntu e WSL 2/Linux são ambientes a suportar; a compatibilidade ainda não foi validada. Produção não é presumida idêntica ao desenvolvimento e GCP não está selecionado.
+- Nenhum código fonte, manifesto de dependências, README, configuração de build, Compose, CI ou dado oficial de partidas foi encontrado. Não existem comandos de build/teste confirmados.
+- OpenSpec é obrigatório para especificação, planejamento e evolução SDD, com governança manual. `openspec/config.yaml` mantém `schema: spec-driven`; comentários explicativos alinhados nesta atualização documental. Ainda não há specs nem mudanças registradas.
 - Requisito define BRT como UTC-3 permanente e todas as exibições neste fuso. Recomenda-se armazenar instantes em UTC e apresentar com offset fixo UTC-03:00 conforme requisito; mudanças oficiais de calendário devem ser atualizações de dados auditáveis, não suposições em código.
 - Não se assume volume de usuários, orçamento, disponibilidade, residência de dados, fornecedor de e-mail ou equipe de operação. Não há backup/recuperação no escopo decidido.
 
@@ -85,15 +85,17 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 
 ### Definido na fonte de requisitos
 
-As regras de pontuação e precedência, placar de mata-mata ao final de 120 minutos, pênaltis não incorporados, janela de uma hora, regra de recepção do requisito v3.1, publicação dos palpites após o corte, 7 rodadas, desempates, grupo único e escopo excluído são requisitos. Recuperação por token único de 30 a 60 minutos e resposta anti-enumeração também estão definidos. Não os flexibilizar por conveniência técnica.
+O requisito v3.2 define placar de mata-mata ao final de 120 minutos sem gols de pênaltis, corte de uma hora e semântica de recepção, publicação após conclusão das gravações elegíveis, sete rodadas, pontuação, ranking corrente e ordem dos critérios de desempate, grupo único e escopo excluído. Recuperação por token único de 30 a 60 minutos e resposta anti-enumeração também estão definidos. Não flexibilizar regras por conveniência técnica. Permanecem abertas as políticas para partidas suspensas/abandonadas/retomadas e alguns efeitos de cancelamento, descritos no registro canônico.
 
-### Recomendação arquitetural (não aprovada)
+### Direção definida e recomendações
 
-Monólito modular no backend; frontend, API e PostgreSQL em serviços locais separados via Compose; cálculo por casos de uso idempotentes, dados oficiais versionados/auditados e projeções derivadas substituíveis. Não introduzir fila/cache/microserviços sem necessidade mensurável.
+**Definido neste escopo:** stack Next.js/TypeScript, FastAPI/Python e PostgreSQL; execução local por Compose em serviços separados com persistência local; monólito modular, DDD pragmático, Clean Architecture, organização por funcionalidades e OpenSpec obrigatório para SDD. Windows 11 com WSL 2/Ubuntu também deve ser suportado.
 
-### Pendências de negócio e operação
+**Recomendado, sujeito a aprovação técnica:** cálculo por casos de uso idempotentes, dados oficiais versionados/auditados e projeções derivadas reconstruíveis. Não introduzir fila, cache distribuído ou microserviços sem necessidade mensurável. Os detalhes de módulos, schema, locks e operação descritos neste documento são recomendações, não regras de produto.
 
-Ver seção 22. As recomendações são propostas para decisão, não regras vigentes. Impedem iniciar somente os fluxos cujo comportamento depender delas; decisões de versão, hospedagem e custo bloqueiam o fechamento da arquitetura operacional, não necessariamente protótipos isolados.
+### Pendências de produto, operação e processo
+
+Ver seção 22 e o registro canônico. Recomendações técnicas permanecem recomendações, não regras vigentes. As lacunas bloqueiam somente os fluxos cujo comportamento dependa delas; versões e detalhes de Compose impedem afirmar compatibilidade e experiência local reproduzível.
 
 ## 7. Atributos de qualidade e prioridades
 
@@ -137,11 +139,11 @@ A topologia representa serviços separados via Docker Compose para frontend, bac
 
 GCP é somente um possível destino de portabilidade. Não há diagrama de produção aprovado nem atividade de implantação/gestão GCP prevista nesta arquitetura.
 
-## 9. Arquitetura escolhida e alternativas
+## 9. Arquitetura recomendada e alternativas
 
-**Proposta:** monólito modular no serviço Python, executado localmente como serviço de backend separado do frontend e do PostgreSQL via Docker Compose. Módulos compartilham deployment do backend e banco, mas cada dado tem autoridade e dependências explícitas. Casos de uso atravessam módulos por interfaces internas ou serviços de aplicação; não se introduz RPC interno.
+**Recomendação:** monólito modular no serviço Python, executado localmente como serviço de backend separado do frontend e do PostgreSQL via Docker Compose. Módulos compartilham deployment do backend e banco, mas mantêm autoridade e dependências explícitas. Casos de uso coordenam operações entre módulos; não se introduz RPC interno.
 
-**Por quê:** escala e operação de um grupo único não justificam microserviços. Uma transação PostgreSQL simplifica a gravação de palpite/corte, registro oficial/auditoria e publicação consistente de apuração. Frontend separado permite executar UI e API em serviços distintos localmente, conforme decisão TEC-02, sem particionar artificialmente o domínio.
+**Por quê:** escala e operação de um grupo único não justificam microserviços. Transações PostgreSQL podem simplificar a gravação de palpite/corte e o registro de resultado/auditoria, mas os mecanismos concretos precisam ser validados com concorrência real. Frontend separado atende à topologia local exigida sem particionar artificialmente o domínio.
 
 **Alternativas consideradas:**
 
@@ -163,7 +165,7 @@ Cada módulo controla suas invariantes e expõe casos de uso/contratos. As front
 | Apuração e pontuação | Função de pontuação pura e resultado calculado por palpite/versão de resultado | Calcular/recalcular, explicar pontuação, registrar versão do cálculo | Recebe palpites/resultados por contratos; não decide calendário nem identidade. Idempotência por chaves naturais/versões. |
 | Ranking e estatísticas | Agregados e projeções por participante/rodada | Consultar ranking e histórico; explicar desempate; atualizar projeções | Consome dados de apuração e participantes; não muda resultados. Projeção reconstruível. |
 | Suporte | Chamados, protocolo, estado e respostas | Abrir, consultar e administrar chamado | Consulta identidade; acesso restrito ao chamado. Retenção pendente. |
-| Gamificação | Definições e concessões de badges após critérios aprovados | Calcular concessão e exibir badges | Depende de métricas de apuração/ranking por interface; não altera pontos. Usar a proposta `docs/requirements/PROD-06-criterios-badges-gamificacao.md`, que aguarda aprovação do responsável pelo produto; concessão automática permanece bloqueada até essa aprovação. |
+| Gamificação | Definições e concessões de badges após critérios aprovados | Calcular concessão e exibir badges | A proposta PROD-06 aguarda aprovação; concessão automática permanece bloqueada. Se aprovada, consumir somente fatos necessários de partidas/apuração por contrato; não depender de ranking salvo se um critério aprovado exigir, e não alterar pontos. |
 
 ### Regras de dependência
 
@@ -187,7 +189,6 @@ backend/
       predictions/{domain,application,adapters}
       scoring/{domain,application,adapters}
       ranking/{domain,application,adapters}
-      administration/{domain,application,adapters}
       support/{domain,application,adapters}
       gamification/{domain,application,adapters}
     shared/                  # primitives realmente comuns, clock, IDs, erros
@@ -279,7 +280,7 @@ Modelo lógico inicial; não equivale a schema aprovado nem migração.
 - Logs sem senhas, tokens, conteúdo integral de e-mail/chamado, palpite confidencial ou dados pessoais desnecessários. Controle de acesso; o prazo de retenção dos próprios logs não está definido (OPS-01).
 - Revisão de dependências, atualizações, análise de vulnerabilidades, SAST/DAST conforme capacidade, revisão de permissões, controles de segurança proporcionais ao ambiente local; sem declarar recuperação/backups.
 - Usar OWASP ASVS como checklist e OWASP API Security para ameaças de autorização, autenticação, abuso e consumo de recursos; selecionar nível/controles após avaliação de risco. Nenhuma certificação/conformidade é declarada.
-- Auditoria append-only lógica, limitada a dados necessários e protegida contra alteração por rotas comuns. Cada resultado corrigido gera evento contendo ator, momento, partida, antes/depois e motivo obrigatório (motivo deve ser confirmado como requisito operacional).
+- Auditoria append-only lógica, limitada a dados necessários e protegida contra alteração por rotas comuns. Cada resultado corrigido gera evento contendo ator, momento, partida e valores anterior/novo; a obrigatoriedade de justificativa para correção de resultado continua por confirmar. Alterações administrativas de kickoff registram ator, instante e valores anterior/novo, sem justificativa textual obrigatória.
 - Não se configura backup nem recuperação neste escopo (OPS-02). Volumes locais não são backup; qualquer futura alteração de escopo deve primeiro reabrir essa decisão.
 
 ### Dependente de decisão
@@ -288,19 +289,19 @@ Escopo e efeitos de exclusão/anonimização, visibilidade administrativa pré-c
 
 ## 16. Palpites, corte e visibilidade
 
-**Regra aprovada:** o corte é uma hora antes do kickoff oficial vigente. O backend valida o timestamp confiável de recepção: pedidos recebidos antes do corte podem concluir depois; recebidos no instante do corte ou depois são rejeitados. Após o corte, palpites tornam-se visíveis na partida. Alteração oficial do kickoff recalcula o corte e pode reabrir a janela (PROD-01/02).
+**Regra aprovada:** o cutoff é uma hora antes do kickoff oficial vigente. O backend valida timestamp confiável de recepção: gravações recebidas antes do cutoff podem concluir depois; recebidas no instante do cutoff ou depois são rejeitadas. A publicação após o cutoff aguarda a conclusão das gravações elegíveis recebidas antes dele. Alteração oficial do kickoff recalcula o cutoff e pode reabrir a janela (PROD-01/02).
 
-**Proposta técnica para corte:** uma única regra compartilhada no domínio/aplicação calcula `cutoff = scheduled_kickoff_utc - 1 hour`; o banco guarda instantes UTC; a avaliação final usa relógio confiável do servidor, não relógio do navegador. Serializar mudança de palpite e mudanças de kickoff pela mesma linha/controle da partida (por exemplo, lock transacional da partida); após obter o lock, ler a versão vigente do kickoff e reavaliar o prazo junto da escrita. A condição é `received_at < cutoff`; requisição elegível pode concluir após o corte, com timestamp confiável preservado para auditoria. O cutoff é sempre recalculado sobre o kickoff oficial vigente; alteração oficial pode reabrir a janela (PROD-02). O timestamp usado pelo banco e a noção de “requisição recebida” precisam ser definidos e testados conforme semântica real do driver/banco na implementação.
+**Proposta técnica para cutoff:** uma única regra compartilhada no domínio/aplicação calcula `cutoff = scheduled_kickoff_utc - 1 hour`; o banco guarda instantes UTC; a avaliação final usa relógio confiável do servidor, não relógio do navegador. Serializar mudança de palpite e mudanças de kickoff pela mesma linha/controle da partida (por exemplo, lock transacional da partida) é uma opção técnica, não uma decisão aprovada; após qualquer sincronização escolhida, a escrita deve usar kickoff vigente e a condição `received_at < cutoff`. A requisição elegível pode concluir após o cutoff, com timestamp confiável preservado para auditoria. O timestamp de recepção, o ponto de ingresso e a garantia de espera/publicação devem ser definidos e testados na implementação. Não se fixa aqui locking específico.
 
-**Visibilidade:** endpoint de consulta verifica estado e hora do servidor em cada chamada; antes do corte responde sem palpites alheios (não apenas ocultação na UI). Depois, lista apenas os dados permitidos. Respostas privadas não podem ser compartilhadas em cache/CDN. Administrador não deve ter bypass pré-corte por padrão; não há exceção administrativa individual para alterar palpites após o corte (PROD-05). A alteração oficial do kickoff pode recalcular o corte e reabrir a janela para todos (PROD-02), conforme decisão registrada e requisito v3.1.
+**Visibilidade:** antes do cutoff vigente, consultas do participante comum não retornam palpites alheios. No cutoff, a publicação aguarda as gravações elegíveis em andamento; depois, disponibiliza os dados permitidos. Respostas privadas não podem ser compartilhadas em cache/CDN. Administrador não tem bypass pré-cutoff por padrão, e não há exceção individual para alteração pós-cutoff (PROD-05). Se alteração oficial do kickoff reabrir a janela (PROD-02), participantes podem escrever até o novo cutoff, enquanto novas consultas alheias permanecem ocultas até lá. A divulgação já observada não pode ser desfeita nem ter confidencialidade restaurada. Alterações de kickoff são auditadas com ator, instante e valores anterior/novo; motivo textual não é obrigatório.
 
-**Concorrência:** duas edições do mesmo palpite devem ter política de conflito explícita. Recomendação: lock/versionamento otimista e última atualização válida vence apenas se a revisão esperada coincidir; caso contrário responder conflito e pedir recarga. O corte e o calendário devem ser rechecados dentro da transação. A semântica de produto está definida em PROD-01; permanece pendente a forma técnica de provar e preservar o timestamp confiável de entrada.
+**Concorrência:** duas edições do mesmo palpite necessitam política técnica de conflito. Lock/versionamento otimista é recomendação, não decisão de produto; conflito pode exigir recarga. O cutoff e calendário devem ser verificados de modo sincronizado, mas o mecanismo fica para desenho e teste técnico. Permanece pendente definir como provar/preservar timestamp confiável de entrada sem falsificação ou replay.
 
 ## 17. Pontuação, recálculo e ranking
 
 ### Pontuação
 
-A fonte define explicitamente cálculo decrescente e excludente. Interpretação de referência: classificar resultado de cada placar na ordem 6, 3, 2, 1, 0; “gols de 1 equipe” é **exatamente uma** equipe nos casos de 3 e 1 pontos. A regra 6 prevalece quando ambos acertam. Tabela de exemplos abaixo usa resultado oficial **2–1** (casa–fora):
+O requisito v3.2 define categorias excludentes e esclarece que “gols de uma equipe” significa acertar exatamente uma das duas contagens, após avaliar o placar exato. A tabela abaixo usa resultado oficial **2–1** (casa–fora):
 
 | Palpite | Resultado geral correto? | Gols exatos | Pontos | Justificativa |
 |---|---:|---|---:|---|
@@ -324,18 +325,18 @@ Se transação extensa causar bloqueios, registrar revisão oficial e cálculo p
 
 ### Ranking
 
-Ordenação aprovada:
+Ordem aprovada pelo requisito, com detalhes de aplicação ainda a esclarecer:
 1. pontos totais DESC;
 2. quantidade de palpites de 6 pontos DESC;
 3. quantidade de palpites de 3 pontos DESC;
 4. pontos acumulados em rodadas anteriores DESC, ignorado em R1;
-5. nome de exibição normalizado, sem acentos e sem diferença entre caixa, ASC.
+5. nome de exibição em ordem alfabética após normalização que ignora acentos e caixa; se os nomes normalizados forem iguais, os participantes permanecem empatados.
 
 Armazenar pontuação por participante/partida/versão; agregar por rodada; manter snapshots/projeções reconstruíveis por versão do resultado/cálculo. Não usar ordem de consulta não determinística: calcular chave normalizada com normalização Unicode e regra de locale estável; se todos os critérios de negócio forem iguais, apresentar empate. ID estável pode ordenar linhas tecnicamente de forma repetível sem alterar a classificação oficial.
 
-O documento de requisitos já define os critérios de desempate e determina que a fórmula seja recalculada a cada partida apurada. Portanto, “rodadas anteriores” não é uma decisão de negócio em aberto: a partir da Rodada 2, aplica-se a pontuação acumulada nas rodadas anteriores à rodada em avaliação; na Rodada 1, ignora-se esse critério. O ranking corrente usa os resultados oficialmente apurados até então e não inclui pontuação de partidas ainda sem apuração. A apresentação pode indicar progresso/partidas pendentes para deixar claro que os dados ainda estão sendo apurados; isso não altera a regra de ordenação.
+O requisito v3.2 define o ranking corrente com base apenas em resultados oficialmente apurados, sem atribuir pontos provisórios ou zero a partidas pendentes. Para o terceiro desempate, uma rodada anterior é concluída quando todas as partidas estão apuradas ou oficialmente canceladas/anuladas; na R1 o critério é ignorado. O último critério normaliza nomes ignorando acentos e caixa; se os valores normalizados forem iguais, os participantes permanecem empatados. Correções em resultados anteriores devem recalcular pontuações derivadas e rankings afetados, preservando a ordem aprovada.
 
-**Pendência limitada à apresentação:** decidir se a interface deve exibir explicitamente estado de apuração/progresso da rodada ou apenas os totais atuais. Correções de resultados de rodadas anteriores devem recalcular as pontuações derivadas e os rankings afetados, preservando a ordem de desempate já aprovada; não constituem mudança dos critérios.
+**Nota técnica:** ordenação interna de linhas pode usar identificador estável, mas não pode converter empate oficial em classificação diferente. O tratamento de partidas excepcionais além de cancelamento/anulação permanece no registro canônico.
 
 ## 18. Transações, concorrência e idempotência
 
@@ -366,9 +367,11 @@ Tecnologias de teste não estão escolhidas. Não há testes implementados nem c
 
 ### Desenvolvimento local
 
-A execução de desenvolvimento definida é Docker Compose com frontend, backend e banco em serviços separados. O banco usa volume local persistente para dados de desenvolvimento/teste; outros volumes só serão montados quando necessários ao fluxo. Dev Container no VS Code é opcional. A configuração Compose e imagens não foram criadas nesta atualização.
+A execução de desenvolvimento obrigatória é Docker Compose com serviços separados para frontend Next.js, backend FastAPI e PostgreSQL. Deve haver volume local para os dados PostgreSQL e para outros dados que precisem sobreviver à recriação dos containers. Arquivo de exemplo de ambiente sem segredos e instruções reproduzíveis de inicialização são entregáveis da futura fundação, não existentes hoje. Dev Container no VS Code é opcional. A configuração Compose e imagens não foram criadas.
 
-Os serviços locais devem manter fronteiras que facilitem substituição/portabilidade futura: configuração por ambiente, aplicação sem dependência de caminhos locais, banco acessado apenas pelo backend e segredos fora de imagens/repositório. Nenhuma dessas diretrizes equivale a criar deployment.
+**Windows 11/WSL 2:** a solução deve funcionar com Docker Desktop e integração WSL 2/Ubuntu, além do uso em WSL 2/Linux. Recomenda-se manter o checkout no filesystem da distribuição WSL para uso pelo Docker integrado; isso é orientação a validar na versão selecionada, não compatibilidade já demonstrada. Documentar caminhos e permissões, bind mounts, file watchers/hot reload, portas publicadas e acesso browser→frontend, rede frontend→API e API→PostgreSQL. Não incluir o banco em portas de host sem necessidade de desenvolvimento justificada.
+
+A futura documentação deve explicar variáveis necessárias e defaults não secretos, configuração local, inicialização, prontidão, reinícios, migrações e diagnóstico de falhas comuns (container/dependência não pronta, portas ocupadas, permissões/mounts e hot reload). Health/readiness devem refletir prontidão real do serviço; ordem de inicialização, isoladamente, não é garantia. Definir execução de migrações de modo controlado e não concorrente. Serviços devem manter configuração por ambiente, não depender de caminhos locais codificados, restringir acesso ao banco ao backend e manter segredos fora de imagens/repositório. A estratégia concreta depende das versões escolhidas e deve ser verificada em Windows 11/WSL 2 e Linux antes de declarar suporte.
 
 ### GCP fora do escopo operacional
 
@@ -388,9 +391,9 @@ Configuração por ambiente validada na inicialização; segredos consultados em
 
 ## 22. Decisões pendentes
 
-O registro central e vigente de decisões pendentes é [`../requirements/decisoes-pendentes.md`](../requirements/decisoes-pendentes.md). Ele organiza as lacunas por domínio, registra recomendações ainda não aprovadas e identifica responsáveis e bloqueios; deve ser atualizado quando decisões forem aprovadas. Esta arquitetura não mantém uma lista paralela para evitar divergência entre documentos.
+O registro canônico de decisões de produto, operação e processo é [`../requirements/decisoes-pendentes.md`](../requirements/decisoes-pendentes.md). Esta arquitetura remete a ele e não mantém lista paralela de decisões.
 
-As decisões fornecidas estão registradas em `../requirements/decisoes-pendentes.md`. Permanecem lacunas: detalhes técnicos da recepção confiável (PROD-01), casos residuais de mudança de kickoff (PROD-02), partidas suspensas/abandonadas e exclusão de canceladas no ranking (PROD-03), estado de apuração e autorização (PROD-04), fluxo de admissão e exclusão (PROD-07/OPS-01), aprovação do catálogo de badges (PROD-06), fornecedor de e-mail (OPS-03), detalhes locais/portabilidade (TEC-02), autenticação/sessão (TEC-01) e checklist leve SDD (TEC-03).
+Permanecem, entre outras, o detalhamento técnico do ponto de recepção confiável e da espera por gravações elegíveis (PROD-01), a sequência operacional de alterações sucessivas de kickoff (PROD-02), os efeitos de cancelamentos e demais partidas excepcionais (PROD-03), o estado e a autorização da apuração (PROD-04), o fluxo de admissão/exclusão (PROD-07/OPS-01), a aprovação de badges (PROD-06), e-mail (OPS-03), ambiente local (TEC-02), identidade/sessão (TEC-01) e baseline/governança/rastreabilidade OpenSpec (TEC-03). Pontuação, ranking corrente, desempates e política de leitura/escrita durante reabertura estão definidos no requisito v3.2. Recomendações arquiteturais não aprovadas não são convertidas em decisões de produto.
 
 Não há exceção administrativa individual pós-corte. Requests recebidos no corte/depois são rejeitados; requests recebidos antes podem concluir após o corte conforme timestamp confiável (PROD-01). Se o kickoff oficial mudar, o corte recalcula e a janela pode reabrir (PROD-02/05). Pontuação, placar válido no mata-mata, visibilidade pós-corte e critérios/ordem de desempate estão definidos no requisito e não são pendências.
 
@@ -407,28 +410,28 @@ Não há exceção administrativa individual pós-corte. Requests recebidos no c
 | Stack/versões sem compatibilidade confirmada | dependências sem suporte ou incompatíveis | matriz de versões e prova de integração antes de fundação; não fixar versões agora |
 | Ausência de backup/recuperação | perda de dados sem restauração assegurada | OPS-02: risco aceito no escopo; não alegar restore |
 | E-mail não entregue ou link abusado | usuário perde acesso/conta atacada | OPS-03, selecionar fornecedor externo; token digest/uso único e rate-limit |
-| Configuração OpenSpec confundida com adoção ou governança automática | mudanças operadas sem revisão consistente | usar OpenSpec apenas como ferramenta sugerida; documentar fluxo leve, revisões e responsáveis, mantendo governança manual |
+| Configuração OpenSpec ou artefatos confundidos com governança automática | mudanças podem ignorar especificação ou aprovação humana | manter fluxo SDD obrigatório, rastreabilidade e registro de aprovação; governança permanece manual |
 | Critérios de badges e detalhes do fluxo de admissão ainda não aprovados | concessões injustas ou acesso indevido | manter badges automáticas bloqueadas e exigir aprovação administrativa |
 
 ## 24. Estratégia SDD/OpenSpec
 
-A diretriz decidida é usar processo SDD leve, com governança manual e OpenSpec como ferramenta sugerida, mas não obrigatória (TEC-03). A configuração incluída no repositório oferece um ponto de partida; não implica adoção compulsória nem substitui aprovações humanas. O checklist de aprovação e histórico ainda deve ser documentado. Não executar instalação/configuração adicional nesta sessão.
+OpenSpec é obrigatório para especificação, planejamento e evolução orientada a mudanças. O processo é leve e a governança permanece humana/manual: especificações e tarefas concluídas não são aprovação para implementar. A obrigatoriedade está registrada em `docs/requirements/decisoes-pendentes.md` (TEC-03), conforme o escopo desta revisão.
 
-Fluxo futuro proposto:
+Fluxo recomendado, sujeito à formalização do checklist e responsáveis:
 
-1. Agente lê `CLAUDE.md`, requisito relevante, arquitetura e decisões aprovadas/pendentes.
-2. Proposta identifica problema, escopo, fora de escopo, critérios de aceite e mudanças de regra, sem implementá-las.
-3. Especificação aponta requisitos existentes e apresenta deltas; divergência de produto exige aprovação explícita.
-4. Design documenta módulos/dados/segurança/migrações e plano de testes.
-5. Tarefas pequenas são revisadas; aprovação humana antes de implementar alteração de negócio ou operação irreversível.
-6. Implementação atualiza documentação, testes e arquitetura quando necessário; revisão valida conformidade com requisito.
-7. Arquivar/atualizar estado só após validação, mantendo histórico rastreável.
+1. Ler `CLAUDE.md`, requisito canônico relevante, arquitetura e registro de decisões/pêndencias.
+2. Criar mudança OpenSpec com problema, origem (IDs/versão dos requisitos e decisões), escopo, fora de escopo e critério de aceite; declarar explicitamente quando não altera regra de produto.
+3. Descrever deltas de especificação sem copiar integralmente o requisito canônico; contradição ou mudança de regra exige decisão/aprovação de produto antes de implementar.
+4. Incluir design quando houver impacto em módulos, dados, segurança, operação ou migrações, e tarefas revisáveis.
+5. Registrar aprovação humana aplicável com aprovador, data, escopo e artefatos/versões; não inferir aprovação a partir do estado dos artefatos.
+6. Relacionar requisito/decisão → cenário/delta → tarefa → teste ou evidência de validação. Atualizar arquitetura/documentação quando decisões aprovadas mudarem.
+7. Após validação, sincronizar/arquivar conforme o fluxo da versão adotada e preservar rastreabilidade.
 
-O `openspec/config.yaml` versionado contém `schema: spec-driven`, exemplos comentados e sem contexto/rules específicos. Ele oferece uma configuração inicial da ferramenta sugerida; não torna OpenSpec obrigatório nem define governança. Não presumir comandos ou versão da CLI; confirmar pela documentação da release adotada antes de documentar comandos executáveis.
+Ainda é necessário decidir se haverá specs-base curadas a partir dos requisitos aprovados ou se cada mudança citará diretamente as fontes canônicas. O repositório contém `schema: spec-driven`, mas não specs nem mudanças. Os comentários de `openspec/config.yaml` devem descrever a obrigatoriedade do processo sem sugerir governança automática. Não presumir versão, comandos ou convenções específicas da CLI: verificar a documentação da release efetivamente selecionada antes de documentá-los.
 
 ## 25. Documentação e contexto de agentes
 
-- `CLAUDE.md` na raiz é índice conciso para estas fontes e limites operacionais; não duplicar arquitetura.
+- `CLAUDE.md` na raiz é índice conciso para estas fontes e limites operacionais; não duplicar arquitetura. Orientações OpenSpec devem ser consistentes com o uso obrigatório e com a governança manual.
 - Requisitos aprovados mantidos como documento canônico. Mudanças propostas registram origem, aprovador, versão e impacto.
 - Arquitetura atualizada quando decisões aprovadas alterarem fronteiras, dados, segurança ou operação; usar ADRs quando uma decisão técnica duradoura exigir histórico. Não criar ADR vazio.
 - Pendências centralizadas em [`../requirements/decisoes-pendentes.md`](../requirements/decisoes-pendentes.md); registrar status, aprovador e data quando resolvidas, sem reescrever o requisito original silenciosamente.
@@ -456,12 +459,10 @@ Não estabelecer datas artificiais sem capacidade, responsáveis e prazo aprovad
 
 ## 27. Bloqueios e próxima ação
 
-- **Não há bloqueio para esta documentação:** o documento de requisitos foi encontrado e lido integralmente.
-- **Git:** o diretório é um repositório Git na branch `main`, mas ainda não possui commits; assim, não há histórico de commits para comparar. Os arquivos aparecem como não rastreados no estado atual.
-- **Fontes:** as consultas consultadas são listadas na seção 3; detalhes de versões suportadas, scripts de portabilidade e operação local ainda não foram fixados. Deployment/gestão GCP e backup/recuperação não fazem parte do escopo decidido.
-- **Dados ausentes:** não existem dados de partidas/seleções, fonte carregada, código de aplicação, README, manifests, CI ou decisões arquiteturais aprovadas no repositório inspecionado.
-- **Próxima ação recomendada:** resolver as lacunas residuais indicadas na seção 22 e no registro central: casos excepcionais de calendário/apuração (PROD-02/03/04), aprovação de badges e detalhes do ciclo de participantes (PROD-06/07), escopo de exclusão (OPS-01), seleção/operação de e-mail (OPS-03), e detalhes de autenticação, topologia local/portabilidade e processo leve (TEC-01/02/03). Em paralelo, definir versões compatíveis para a fundação local. As regras principais de PROD-01 a PROD-08 já registradas, pontuação e desempates não devem ser reapresentados como decisões inteiramente pendentes. Deployment/gestão GCP e backup/recuperação permanecem fora do escopo decidido.
+- **Estado do repositório observado nesta revisão:** há commits Git; documentos e workflows presentes devem ser diferenciados entre rastreados e não rastreados conforme o estado corrente. Não usar snapshots anteriores de Git como fatos permanentes da arquitetura.
+- **Dados ausentes:** não foram encontrados código de aplicação, Compose/Dockerfiles, manifests, `.env.example`, CI, testes ou dados oficiais de partidas/seleções. Não há decisões arquiteturais formalmente aprovadas registradas por ADR.
+- **Próxima ação recomendada:** resolver pendências de produto/operação antes dos fluxos dependentes e selecionar versões/configuração local antes da fundação. Seguir a revisão em `revisao-arquitetura-multiagentes.md` e o registro canônico de decisões pendentes. Adoção de OpenSpec é obrigatória; convenções de baseline, aprovação e rastreabilidade permanecem pendentes.
 
-## 28. Confirmação de escopo desta sessão
+## 28. Escopo desta atualização documental
 
-Esta sessão atualizou somente documentação de requisitos e arquitetura. Não implementou funcionalidades, endpoints, telas, migrações ou testes; não instalou dependências, alterou configuração executável, criou recursos de nuvem, nem realizou operações destrutivas ou em produção.
+Esta atualização revisa recomendações arquiteturais e registros documentais. Não implementa funcionalidades, endpoints, telas, migrações, testes ou Compose; não instala dependências, inicializa OpenSpec, altera o schema ou comportamento da configuração OpenSpec, cria recursos de nuvem ou realiza operações destrutivas/em produção. Apenas comentários explicativos em `openspec/config.yaml` foram alinhados à adoção obrigatória. Compatibilidade de runtime não foi testada.

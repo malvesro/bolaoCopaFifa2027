@@ -1,5 +1,5 @@
-# OpenSpec é sugerido como ferramenta para apoiar o processo SDD leve do projeto.
-# Seu uso não é obrigatório; aprovações e governança permanecem manuais.
+# OpenSpec é obrigatório para especificação, planejamento e evolução orientada a mudanças.
+# Aprovações e governança permanecem humanas e manuais.
 schema: spec-driven
 
 # Project context (optional)

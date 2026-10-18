@@ -1,10 +1,10 @@
 # Documento de Requisitos — Bolão Copa do Mundo Feminina da FIFA Brasil 2027™
 
-**Versão:** 3.1  
+**Versão:** 3.2
 **Data:** 18/10/2026  
 **Analista Responsável:** Analista de Requisitos Sênior / Wayfinder
 
-**Histórico de revisão:** v3.1 (18/10/2026) esclarece a semântica de recepção de requisições na fronteira do corte conforme decisão de produto registrada em `decisoes-pendentes.md` (PROD-01).  
+**Histórico de revisão:** v3.2 (18/10/2026) esclarece a interpretação da pontuação, aplicação do ranking corrente, normalização do nome e visibilidade em reabertura conforme decisões registradas nesta revisão e em `decisoes-pendentes.md`; preserva PROD-02/05. v3.1 (18/10/2026) esclarece a semântica de recepção de requisições na fronteira do corte conforme PROD-01.
 **Fonte de Referência:** Tabela oficial FIFA.com (Brasil 2027™) + Regras de negócio alinhadas com o cliente  
 
 ---
@@ -38,10 +38,24 @@ A pontuação é calculada de forma decrescente e excludente (apenas a maior pon
 | Pontos | Condição | Descrição |
 |---|---|---|
 | **6** | Acerto do placar exato | Gols de ambas as equipes exatamente iguais ao resultado oficial |
-| **3** | Acerto do vencedor/empate + gols de 1 equipe | Acertou quem venceu (ou empate) e cravou os gols de um dos times |
-| **2** | Acerto apenas do resultado | Acertou vitória, derrota ou empate, mas errou o número exato de gols de ambos |
-| **1** | Acerto apenas dos gols de 1 equipe | Errou o resultado geral, mas acertou a quantidade de gols de um dos times |
+| **3** | Acerto do vencedor/empate + gols de exatamente uma equipe | Acertou quem venceu (ou empate) e exatamente uma das duas contagens de gols |
+| **2** | Acerto apenas do resultado | Acertou vitória, derrota ou empate, mas errou o número exato de gols de ambas as equipes |
+| **1** | Acerto apenas dos gols de exatamente uma equipe | Errou o resultado geral, mas acertou exatamente uma das duas contagens de gols |
 | **0** | Demais combinações | Nenhum acerto de resultado nem de gols |
+
+As categorias são avaliadas na ordem decrescente da tabela. Primeiro verifica-se o placar exato (6 pontos); assim, não se atribuem 3 ou 1 ponto quando ambas as contagens estão corretas. “Exatamente uma equipe” significa acertar a quantidade de gols de uma equipe e errar a da outra.
+
+Exemplos com resultado oficial **2 x 1** (casa x visitante):
+
+| Palpite | Resultado (vitória/empate/derrota) correto? | Contagens de gols corretas | Pontos |
+|---|---:|---|---:|
+| 2 x 1 | Sim | ambas | 6 |
+| 2 x 0 | Sim | apenas casa | 3 |
+| 3 x 1 | Sim | apenas visitante | 3 |
+| 3 x 0 | Sim | nenhuma | 2 |
+| 0 x 1 | Não | apenas visitante | 1 |
+| 2 x 2 | Não | apenas casa | 1 |
+| 0 x 0 | Não | nenhuma | 0 |
 
 #### 1.3.2 Regra Oficial para Partidas de Mata-Mata (Eliminatórias)
 
@@ -51,13 +65,14 @@ A pontuação é calculada de forma decrescente e excludente (apenas a maior pon
   - Os gols convertidos na disputa de pênaltis **não são somados** ao placar da partida.
   - Participantes que palpitaram empate pontuam normalmente conforme a tabela de pontuação (placar exato 6 pts se cravaram os gols aos 120 min, ou 2 pts por acertar o empate).
 
-#### 1.3.3 Prazos, Bloqueios e Transparência
+#### 1.3.3 Horário da partida, prazo dos palpites e transparência
 
-- **Janela de Palpite:** Palpites disponíveis até **1 hora antes** do início oficial de cada partida (referência BRT).
-- **Bloqueio Automático:** O backend registra, no ponto confiável de entrada da requisição, um timestamp de recepção gerado pelo servidor. Uma criação ou alteração é válida somente se esse timestamp for anterior ao corte calculado como uma hora antes do início oficial vigente da partida; no instante do corte ou depois, a API rejeita a operação. Uma requisição recebida antes do corte pode concluir a gravação após T−1h, desde que o timestamp de recepção confiável seja preservado para auditoria. O horário informado pelo cliente não é aceito como evidência.
-- **Transparência Social:** Imediatamente após o encerramento da janela (1h antes do jogo), **todos os palpites registrados por todos os participantes para aquela partida tornam-se públicos** e visíveis na tela do jogo, garantindo total transparência e engajamento.
-- **Revisão Administrativa:** Resultados oficiais lançados pelo administrador podem ser corrigidos em caso de erro, disparando recálculo automático e idempotente.
-- **Fuso Horário:** Todas as datas e horários são exibidos de forma padronizada no horário de Brasília (BRT).
+- **Horário da partida e corte:** o horário oficial de início (kickoff) e o instante de fechamento dos palpites são conceitos/dados distintos. O corte vigente é calculado como uma hora antes do kickoff oficial vigente da partida (referência BRT). Uma alteração administrativa de kickoff atualiza o horário oficial e recalcula o corte; conforme PROD-02/05, essa alteração pode reabrir a janela de palpites para todos. Não há alteração individual de palpite após o corte vigente.
+- **Bloqueio concorrente:** o backend registra, no ponto confiável de entrada da requisição, um timestamp de recepção gerado pelo servidor. Criação/alteração é elegível somente quando esse timestamp for anterior ao corte vigente; no instante do corte ou depois, a API rejeita. Uma requisição recebida antes do corte pode concluir a gravação depois dele, com timestamp preservado para auditoria. O horário do cliente não é evidência. A primeira divulgação pública deve aguardar a conclusão das gravações elegíveis recebidas antes do corte.
+- **Visibilidade:** antes do corte vigente, nenhum participante comum pode consultar palpites alheios; autorização e prazo são impostos pelo backend em todas as rotas e consultas. Após o corte, os palpites são divulgados. Se uma alteração oficial do kickoff reabrir a janela, novas consultas de palpites alheios ficam ocultas até o novo corte, quando a grade é divulgada novamente. Uma divulgação anteriormente observada não pode ser desfeita nem se tornar confidencial novamente; essa ocultação controla apenas novas consultas. Participantes podem criar ou editar seus próprios palpites até o novo corte vigente.
+- **Auditoria do calendário:** alterações administrativas de kickoff registram ator, instante e valores anterior/novo. Justificativa textual não é obrigatória.
+- **Correção de resultado:** resultados oficiais lançados pelo administrador podem ser corrigidos em caso de erro, com nova revisão, auditoria e recálculo idempotente.
+- **Fuso Horário:** todas as datas e horários são exibidos de forma padronizada no horário de Brasília (BRT).
 
 #### 1.3.4 Estrutura de Rodadas
 
@@ -72,11 +87,13 @@ Para efeito de histórico e desempate, o torneio é dividido em 7 rodadas oficia
 
 #### 1.3.5 Critérios de Desempate do Ranking
 
-Aplicados rigorosamente na seguinte ordem quando dois ou mais participantes empatam na pontuação total acumulada:
-1. **Maior quantidade de acertos de placar exato (acertos de 6 pontos)** — premia a precisão máxima.
-2. **Maior quantidade de acertos de vencedor/empate com gols de uma equipe (acertos de 3 pontos)**.
-3. **Maior pontuação acumulada em rodadas anteriores** — aplicável a partir da Rodada 2 (na Rodada 1 este critério é ignorado por ser 0 para todos).
-4. **Ordem alfabética** pelo nome formatado de exibição do participante (sem distinção de maiúsculas/minúsculas).
+Aplicados rigorosamente nesta ordem quando dois ou mais participantes empatam na pontuação total acumulada:
+1. **Maior quantidade de acertos de placar exato (acertos de 6 pontos)**.
+2. **Maior quantidade de acertos de 3 pontos** (resultado correto e contagem de gols de exatamente uma equipe correta).
+3. **Maior pontuação acumulada em rodadas anteriores concluídas**. Para o ranking corrente, considera-se a soma dos pontos oficialmente apurados em todas as rodadas anteriores concluídas à rodada corrente mais recente que tenha pelo menos uma partida apurada. Uma rodada é concluída quando todas as suas partidas têm resultado oficial apurado ou estão oficialmente canceladas/anuladas. Na Rodada 1, este critério é ignorado. Partidas ainda sem resultado oficial não contribuem pontos nem acertos; não se estimam nem se atribuem zero pontos para fins deste cálculo.
+4. **Ordem alfabética** pelo nome de exibição normalizado, ignorando acentos e diferenças entre maiúsculas/minúsculas. Nomes iguais após a normalização permanecem empatados; nenhum critério adicional altera a classificação.
+
+O ranking corrente inclui somente pontos e acertos decorrentes de resultados oficiais já apurados. Uma partida pendente não recebe pontuação provisória. A cada apuração ou correção oficial, totais e ordem são recalculados; correções seguem a revisão e auditoria definidas na regra de resultados.
 
 ---
 
@@ -186,21 +203,25 @@ Aplicados rigorosamente na seguinte ordem quando dois ou mais participantes empa
 - Campos numéricos inteiros $\ge 0$ para cada seleção.
 - Rejeição de valores negativos, decimais ou caracteres especiais.
 - Confirmação visual imediata de salvamento com feedback em tela.
-- Permitida edição ilimitada enquanto faltar mais de 60 minutos para o início do jogo (BRT).
+- Permitida edição enquanto a requisição for recebida antes do corte vigente, inclusive durante uma reabertura decorrente de alteração oficial do kickoff, conforme HU-02/HU-03.
 
 ### HU-02 & HU-03 — Contagem Regressiva e Bloqueio Estrito
-- Contador regressivo em tempo real até o corte (Início - 1 hora).
+- Contador regressivo em tempo real até o corte vigente (kickoff oficial vigente - 1 hora).
 - Alerta visual diferenciado nos últimos 15 minutos antes do bloqueio.
-- A API deve avaliar um timestamp de recepção confiável gerado pelo servidor: aceita gravação/edição somente quando esse timestamp for anterior a $T - 1h$; no instante do corte ou depois, rejeita com código de erro amigável (`403 Forbidden` / `"Prazo encerrado"`). Uma requisição recebida antes do corte pode concluir a transação após $T - 1h$, e o timestamp de recepção deve ser preservado para auditoria. O relógio informado pelo cliente não é evidência válida.
-- Interface transmuta os campos de edição em visualização estática.
+- A API deve avaliar um timestamp de recepção confiável gerado pelo servidor: aceita gravação/edição somente quando esse timestamp for anterior ao corte vigente; no instante do corte ou depois, rejeita com código de erro amigável (`403 Forbidden` / `"Prazo encerrado"`). Uma requisição recebida antes do corte pode concluir a transação após esse instante, e o timestamp de recepção deve ser preservado para auditoria. O relógio informado pelo cliente não é evidência válida.
+- A primeira divulgação após o corte aguarda a conclusão das gravações elegíveis recebidas antes do corte.
+- Alterações administrativas de kickoff são registradas com ator, instante e valores anterior/novo; justificativa não é obrigatória. O novo kickoff recalcula o corte e pode reabrir a janela para todos, conforme PROD-02/05.
+- Interface transmuta os campos de edição em visualização estática quando a janela vigente estiver fechada.
 
 ### HU-20 — Transparência e Grade Pública de Palpites Pós-Corte
-- Imediatamente após o corte ($T - 1h$), uma aba ou botão "Ver Palpites da Galera" fica acessível na partida.
+- Após o corte vigente, uma aba ou botão "Ver Palpites da Galera" fica acessível na partida.
 - Exibe lista com nome de cada participante e o placar palpitado.
-- Antes do corte ($T - 1h$), **nenhum participante comum** pode ter acesso aos palpites alheios (protegido no backend).
+- Antes do corte vigente, **nenhum participante comum** pode consultar palpites alheios; a regra é aplicada no backend em todas as rotas e consultas.
+- Se mudança oficial de kickoff reabrir a janela, novas consultas de palpites alheios ficam ocultas até o novo corte, quando a grade volta a ser exibida. Isso não desfaz divulgação anteriormente observada nem restaura confidencialidade; participantes podem editar seus palpites até o novo corte.
 
 ### HU-07 — Cálculo Automático de Pontuação e Mata-Mata
-- Hierarquia estrita: 6 pts $\rightarrow$ 3 pts $\rightarrow$ 2 pts $\rightarrow$ 1 pt $\rightarrow$ 0 pts.
+- Hierarquia estrita: 6 pts $\rightarrow$ 3 pts $\rightarrow$ 2 pts $\rightarrow$ 1 pt $\rightarrow$ 0 pts. Para 3 e 1 ponto, “gols de exatamente uma equipe” significa acertar uma contagem e errar a outra, após verificar primeiro o placar exato.
+- Exemplos de classificação para resultado oficial 2 x 1: palpites 2 x 0 e 3 x 1 recebem 3; 3 x 0 recebe 2; 0 x 1 e 2 x 2 recebem 1; 0 x 0 recebe 0. Placar 2 x 1 recebe 6.
 - **Mata-Mata:**
   - O placar inserido pelo administrador reflete o resultado ao término dos 120 minutos.
   - Caso haja pênaltis, o resultado oficial no sistema é EMPATE (gols de pênaltis não entram no placar).
@@ -212,13 +233,16 @@ Aplicados rigorosamente na seguinte ordem quando dois ou mais participantes empa
     - Quem apostou vitória de quem venceu nos pênaltis (ex.: 3x2): ganha **0 pontos** (o jogo terminou empatado com bola rolando).
 
 ### HU-10 — Aplicação Automática de Desempate
-- Ordenação decrescente:
+- O ranking corrente considera somente pontuações e acertos de partidas com resultado oficial apurado. Partidas sem resultado oficial não recebem pontos provisórios nem zero pontos.
+- Ordenação aplicada nesta ordem:
   1. `pontos_totais` DESC
   2. `qtd_placar_exato_6pts` DESC
   3. `qtd_acertos_3pts` DESC
-  4. `pontos_acumulados_rodada_anterior` DESC (ignorado na Rodada 1)
-  5. `nome_normalizado` ASC (sem acentos, minúsculo)
-- A fórmula deve ser recalculada a cada partida apurada.
+  4. `pontos_acumulados_rodadas_anteriores_concluidas` DESC (ignorado na Rodada 1)
+  5. `nome_normalizado` ASC (normalização Unicode sem acentos e sem diferença entre maiúsculas/minúsculas)
+- Para o quarto critério, consideram-se todas as rodadas anteriores concluídas à rodada corrente mais recente que contenha ao menos uma partida apurada. Uma rodada é concluída quando todas as partidas têm resultado oficial apurado ou estão oficialmente canceladas/anuladas. Pontos de rodadas não concluídas não entram nesse critério.
+- Participantes com nomes iguais após normalização permanecem empatados; não se aplica critério adicional para alterar a classificação.
+- A fórmula é recalculada a cada partida apurada ou corrigida. Resultados e correções são oficiais e versionados conforme HU-08.
 
 ### HU-21 — Recuperação de Senha por E-mail
 - Formulário simples solicitando o e-mail cadastrado.
