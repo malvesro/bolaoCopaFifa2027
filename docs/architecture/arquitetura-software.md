@@ -30,7 +30,7 @@ Incluem-se decisões e recomendações de arquitetura para desenvolvimento local
 1. `docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`, versão 3.1, 18/10/2026 — fonte de verdade para regras do produto.
 2. `docs/architecture/PROMPT-ARQUITETURA-CLAUDE-CODE.md` — instrução para esta proposta; não é aprovação de decisões técnicas.
 3. `docs/requirements/decisoes-pendentes.md` — registro das decisões e lacunas residuais.
-4. `openspec/config.yaml` e estrutura do repositório — confirmam scaffolding `spec-driven`; a direção registrada é usar processo leve equivalente, não tornar OpenSpec obrigatório.
+4. `openspec/config.yaml` e estrutura do repositório — fornecem configuração inicial `spec-driven`; OpenSpec é a ferramenta sugerida para apoiar o processo SDD leve, com governança manual, sem uso obrigatório.
 
 ### Precedência
 
@@ -77,7 +77,7 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 - Grupo único; não adicionar tenant/ligas independentes.
 - Stack conceitual: Next.js/TypeScript, FastAPI/Python e PostgreSQL; versões continuam por selecionar. Execução local com Docker Compose está definida. Portabilidade a GCP é uma meta, não compromisso de deployment ou operação.
 - Nenhum código fonte, manifesto de dependências, README, configuração de build, CI ou dado oficial de partidas foi encontrado. Não existem comandos de build/teste confirmados.
-- OpenSpec possui configuração `schema: spec-driven`, mas a decisão é usar processo leve equivalente, sem torná-lo obrigatório; o checklist manual ainda será detalhado.
+- OpenSpec possui configuração `schema: spec-driven` e é a ferramenta sugerida para apoiar o processo SDD leve; sua utilização não é obrigatória, a governança permanece manual e o checklist ainda será detalhado.
 - Requisito define BRT como UTC-3 permanente e todas as exibições neste fuso. Recomenda-se armazenar instantes em UTC e apresentar com offset fixo UTC-03:00 conforme requisito; mudanças oficiais de calendário devem ser atualizações de dados auditáveis, não suposições em código.
 - Não se assume volume de usuários, orçamento, disponibilidade, residência de dados, fornecedor de e-mail ou equipe de operação. Não há backup/recuperação no escopo decidido.
 
@@ -407,12 +407,12 @@ Não há exceção administrativa individual pós-corte. Requests recebidos no c
 | Stack/versões sem compatibilidade confirmada | dependências sem suporte ou incompatíveis | matriz de versões e prova de integração antes de fundação; não fixar versões agora |
 | Ausência de backup/recuperação | perda de dados sem restauração assegurada | OPS-02: risco aceito no escopo; não alegar restore |
 | E-mail não entregue ou link abusado | usuário perde acesso/conta atacada | OPS-03, selecionar fornecedor externo; token digest/uso único e rate-limit |
-| OpenSpec scaffolding confundido com processo aprovado | mudanças operadas sem revisão consistente | aprovar fluxo, versão e responsáveis antes de tornar obrigatório |
+| Configuração OpenSpec confundida com adoção ou governança automática | mudanças operadas sem revisão consistente | usar OpenSpec apenas como ferramenta sugerida; documentar fluxo leve, revisões e responsáveis, mantendo governança manual |
 | Critérios de badges e detalhes do fluxo de admissão ainda não aprovados | concessões injustas ou acesso indevido | manter badges automáticas bloqueadas e exigir aprovação administrativa |
 
 ## 24. Estratégia SDD/OpenSpec
 
-A diretriz decidida é usar processo leve equivalente, mantendo governança manual; OpenSpec não será obrigatório (TEC-03). O scaffold existente não implica adoção. O checklist de aprovação e histórico ainda deve ser documentado. Não executar instalação/configuração nesta sessão.
+A diretriz decidida é usar processo SDD leve, com governança manual e OpenSpec como ferramenta sugerida, mas não obrigatória (TEC-03). A configuração incluída no repositório oferece um ponto de partida; não implica adoção compulsória nem substitui aprovações humanas. O checklist de aprovação e histórico ainda deve ser documentado. Não executar instalação/configuração adicional nesta sessão.
 
 Fluxo futuro proposto:
 
@@ -424,7 +424,7 @@ Fluxo futuro proposto:
 6. Implementação atualiza documentação, testes e arquitetura quando necessário; revisão valida conformidade com requisito.
 7. Arquivar/atualizar estado só após validação, mantendo histórico rastreável.
 
-O `openspec/config.yaml` atual contém `schema: spec-driven`, exemplos comentados e sem contexto/rules específicos. Não presumir comandos ou versão da CLI; confirmar pela documentação da release adotada antes de documentar comandos executáveis.
+O `openspec/config.yaml` versionado contém `schema: spec-driven`, exemplos comentados e sem contexto/rules específicos. Ele oferece uma configuração inicial da ferramenta sugerida; não torna OpenSpec obrigatório nem define governança. Não presumir comandos ou versão da CLI; confirmar pela documentação da release adotada antes de documentar comandos executáveis.
 
 ## 25. Documentação e contexto de agentes
 

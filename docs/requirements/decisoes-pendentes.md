@@ -165,8 +165,8 @@ As direções abaixo foram decididas; os itens identificam somente os detalhes a
 
 ### TEC-03 — Processo SDD/OpenSpec
 
-- **Decisão registrada (B):** usar processo leve equivalente, com menor dependência de ferramenta e governança mantida manualmente; OpenSpec não é obrigatório.
-- **Contexto:** o repositório mantém scaffold `spec-driven`, que não constitui adoção do processo.
+- **Decisão registrada (B):** adotar processo SDD leve, com governança manual; OpenSpec é a ferramenta sugerida para organizar os artefatos, mas não é obrigatório.
+- **Contexto:** o repositório mantém a configuração `spec-driven` do OpenSpec como ponto de partida; isso não torna a ferramenta obrigatória nem substitui a governança manual.
 - **Lacuna residual:** checklist mínimo, responsáveis por aprovação e forma de manter histórico manual.
 - **Aprovação registrada:** diretriz fornecida pelo usuário em 18/10/2026; aprovador organizacional não identificado.
 - **Status:** Direção decidida; procedimento leve a documentar.
