@@ -1,11 +1,11 @@
 # Backend - FastAPI/Python
 
-Esta diretoria contém a API backend desenvolvida com FastAPI e Python seguindo a arquitetura definida em `docs/architecture/arquitetura-software.md`.
+Esta pasta contém o scaffold da API FastAPI/Python. A direção aprovada no `docs/architecture/decisoes-tecnicas/ADR-001-vsa-monorepo-e-persistencia.md` organiza casos de uso em fatias verticais por módulo; o scaffold atual de camadas não fixa a estrutura da implementação.
 
 ## Estrutura
 
-- `app/entrypoints/http/` - FastAPI, routers, schemas de transporte, middleware
-- `app/modules/` - Módulos de domínio organizados por funcionalidade:
+- `app/entrypoints/http/` - Diretório reservado do scaffold; routers podem pertencer às fatias conforme design da change de VSA
+- `app/modules/` - Módulos por capacidade (atualmente apenas scaffold; fatias por caso de uso serão criadas nas changes):
   - `identity/` - Identidade e acesso
   - `tournament/` - Torneio e calendário
   - `predictions/` - Palpites
@@ -25,10 +25,10 @@ Esta diretoria contém a API backend desenvolvida com FastAPI e Python seguindo 
 ## Convenções
 
 - Domínio: objetos/valores e políticas puras, sem ORM nem framework
-- Aplicação: casos de uso e limites transacionais
-- Entrada: routers FastAPI e modelos Pydantic adaptam HTTP aos casos de uso
-- Saída: repositórios SQLAlchemy, e-mail, relógio e observabilidade implementam portas
-- Persistência: SQLAlchemy 2.x; sessões/transações com escopo explícito por caso de uso
+- Casos de uso: fatias por capacidade reúnem entradas, aplicação e saídas necessárias; não duplicar regras proprietárias do domínio
+- Entrada: routers FastAPI e modelos Pydantic adaptam HTTP aos casos de uso, conforme design específico
+- Saída: repositórios SQLAlchemy, e-mail, relógio e observabilidade implementam portas quando necessárias
+- Persistência: SQLAlchemy síncrono como direção inicial; driver, URL, versões e escopo concreto de transações ainda precisam de change e validação
 - Validação: Pydantic/HTTP valida forma/tipo; domínio valida regras
 - Erros: contrato estável sem revelar detalhes internos
 - Configuração: variáveis não secretas por ambiente; segredos via gerenciador aprovado

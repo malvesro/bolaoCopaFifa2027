@@ -24,7 +24,7 @@ Plataforma web de alta integridade e transparência para gestão de palpites e a
 
 O sistema é uma aplicação web moderna e responsiva voltada a um grupo privado único (comunidade, empresa ou organização) para disputa de palpites de placar nos 64 jogos da Copa do Mundo Feminina da FIFA Brasil 2027™ (24/06 a 25/07/2027).
 
-### 1.1 Regras Fundamentais de Negócio (Requisitos v3.2)
+### 1.1 Regras Fundamentais de Negócio (Requisitos v3.4; regras v3.2 preservadas)
 
 - **Escopo do torneio:** 32 seleções nacionais, 8 grupos (A a H), 64 partidas (48 na fase de grupos e 16 no mata-mata) organizadas em 7 rodadas oficiais.
 - **Sistema de pontuação decrescente e excludente:**
@@ -53,23 +53,25 @@ O sistema é uma aplicação web moderna e responsiva voltada a um grupo privado
 
 ## 2. Estado Atual do Projeto
 
-O repositório encontra-se no estágio de **fundação documental e scaffold de infraestrutura**. Não há código de negócio nem telas implementadas.
+O repositório encontra-se no estágio de **fundação documental e scaffold de infraestrutura**. Não há código de negócio implementado; existem apenas o entrypoint de healthcheck do backend e uma página placeholder no frontend.
 
 | Área | Estado Real | Detalhe |
 |---|---|---|
-| **Documentação Canônica** | **Implementada** | Requisitos v3.2, Decisões Pendentes v1.2, Arquitetura v0.3 e Proposta de Gamificação PROD-06 consolidadas em `docs/`. |
-| **Governança SDD** | **Implementada** | OpenSpec configurado (`openspec/config.yaml`), com comandos e workflows para agentes de IA em `.claude/`, `.agents/`, `.roo/`, `.kiro/` e `.opencode/`. |
+| **Documentação Canônica** | **Registrada** | Requisitos v3.4 (HU-22/23), Decisões Pendentes v1.5, Arquitetura v0.4, ADR-001 e critérios PROD-06 (aprovados em 19/10/2026, com pendências); detalhes de vínculo/segurança ainda abertos. |
+| **Governança SDD** | **Scaffold documental** | OpenSpec configurado (`openspec/config.yaml`, com `context` e `rules`) e comandos/skills em `.claude/`. Changes `2026-10-18-technical-foundation` e `2026-10-19-identity-email-link` estão propostas; validação sintática não equivale a aprovação nem validação do build. |
 | **Topologia Local (Docker)** | **Configurada** | `docker-compose.yml` estruturado com 3 serviços (`frontend`, `backend`, `db`), rede bridge e volume persistente. |
-| **Backend (FastAPI)** | **Scaffold Estrutural** | Estrutura de diretórios DDD/Clean Architecture criada, `pyproject.toml` configurado, `Dockerfile` multi-stage presente. Módulos em `app/modules/` contêm apenas `.gitkeep`. O entrypoint `app.bootstrap.main:app` ainda **não foi codificado**. |
-| **Frontend (Next.js)** | **Scaffold Estrutural** | Estrutura App Router criada (`app/`, `features/`, `components/`, `lib/`), `package.json`, `tsconfig.json` e `Dockerfile` presentes. Não há páginas (`page.tsx`) ou layouts (`layout.tsx`) implementados ainda. |
+| **Backend (FastAPI)** | **Scaffold Estrutural** | Estrutura de diretórios DDD/Clean Architecture criada, `pyproject.toml` configurado, `Dockerfile` multi-stage presente. Módulos em `app/modules/` contêm apenas marcadores e `__init__.py`, sem regras implementadas. O entrypoint `app.bootstrap.main:app` existe e expõe `/`, `/live` e `/ready`; o `/ready` ainda não consulta o banco. |
+| **Frontend (Next.js)** | **Scaffold Estrutural** | Estrutura App Router criada (`app/`, `features/`, `components/`, `lib/`), `package.json`, `tsconfig.json` e `Dockerfile` presentes. Existem `layout.tsx`, `loading.tsx`, `not-found.tsx` e `page.tsx` básicos; `globals.css`, `public/`, lockfile e configuração do ESLint foram criados localmente em 19/10/2026 (ainda não commitados); instalação, build e lint **não foram validados**. |
 | **Banco de Dados & Migrações**| **Scaffold** | Serviço PostgreSQL 16 declarado no Compose. Diretório `backend/migrations/` contém apenas `.gitkeep`; schemas e tabelas Alembic ainda não foram inicializados. |
 | **Suíte de Testes** | **Scaffold** | Diretórios estruturados (`unit/`, `integration/`, `api/`, `contract/`), dependências declaradas (`pytest`, `ruff`, `mypy`), sem testes implementados. |
+
+**Decisão de identidade:** [HU-22/23](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md) exigem verificar o endereço local novo ou alterado por código numérico de seis dígitos enviado a ele, com até três tentativas por verificação, antes de considerá-lo para vínculo Google/local por e-mail. Conta validada com identidade Google já vinculada pode autenticar-se novamente por `sub`. Isso não concede participação sem aprovação administrativa nem substitui a recuperação HU-21. Prova segura do primeiro vínculo, validade, reenvio/reinício de tentativas e efeitos da troca de endereço ainda exigem decisão; a [change de identidade](openspec/changes/2026-10-19-identity-email-link/proposal.md) é proposta, não autorização para implementar.
 
 ---
 
 ## 3. Arquitetura em uma Visão
 
-A arquitetura adota um **monólito modular** no backend (FastAPI/Python), separado do frontend (Next.js/TypeScript) e do banco relacional (PostgreSQL 16), comunicando-se estritamente via API REST tipada.
+A direção aprovada no [ADR-001](docs/architecture/decisoes-tecnicas/ADR-001-vsa-monorepo-e-persistencia.md) mantém `backend/` e `frontend/` no mesmo repositório, com monólito modular FastAPI/Python e fatias verticais por caso de uso dentro de módulos por capacidade, frontend Next.js/TypeScript organizado por funcionalidades e PostgreSQL local separado. A comunicação entre runtimes será por contrato de API; os diagramas de camadas abaixo retratam o scaffold/proposta anterior, **não** impõem a árvore interna de módulos nem afirmam implementação.
 
 ### 3.1 Diagrama 1 — Arquitetura do Sistema
 
@@ -107,7 +109,7 @@ flowchart TB
   P -->|"HTTPS / HTTP (Porta 3000)"| FrontendApp
   A -->|"HTTPS / HTTP (Porta 3000)"| FrontendApp
   APIClient -->|"REST / JSON Tipado (Porta 8000)"| HTTP
-  Adapters -->|"asyncpg / SQLAlchemy"| DB
+  Adapters -->|"SQLAlchemy / driver a decidir"| DB
   Adapters -.->|"Envio transacional (planejado OPS-03)"| MailSvc
 ```
 
@@ -156,7 +158,7 @@ flowchart TD
       SP_Adap["Adaptadores (TicketRepo)"]
     end
 
-    subgraph Gamification["gamification (Aguardando Aprovação PROD-06)"]
+    subgraph Gamification["gamification (PROD-06 aprovada; pendências 06.5/06.6)"]
       GM_App["Casos de Uso (Concessão de Badges)"]
       GM_Dom["Domínio (Catálogo de Conquistas)"]
       GM_Adap["Adaptadores (BadgeRepo)"]
@@ -198,15 +200,15 @@ flowchart TD
 |---|---|---|---|
 | **Frontend** | Next.js / React | `^14.0.0` / `^18.2.0` | Interface web com App Router, SSR e renderização híbrida |
 | **Linguagem Frontend** | TypeScript | `^5.0.0` | Tipagem estática e contratos de dados |
-| **Backend** | FastAPI / Python | `>=0.100.0` / `>=3.11` | API assíncrona de alto desempenho, documentação automática OpenAPI |
+| **Backend** | FastAPI / Python | `>=0.100.0` / `>=3.11` | API HTTP e OpenAPI; persistência síncrona como direção inicial (ADR-001), ainda não configurada |
 | **Servidor ASGI** | Uvicorn | `>=0.23.0` | Execução HTTP assíncrona do backend |
 | **Validação** | Pydantic / Pydantic Settings | `>=2.0.0` | Validação de payloads e configurações tipadas de ambiente |
-| **ORM / Banco** | SQLAlchemy / asyncpg | `>=2.0.0` / `>=0.28.0` | Mapeamento relacional assíncrono e controle transacional |
+| **ORM / Banco** | SQLAlchemy / asyncpg | `>=2.0.0` / `>=0.28.0` | SQLAlchemy síncrono aprovado como direção inicial (ADR-001); `asyncpg` ainda declarado no scaffold e driver/URL compatíveis pendentes |
 | **Migrações** | Alembic | `>=1.12.0` | Versionamento e evolução de schema do banco relacional |
 | **Banco Relacional** | PostgreSQL (Alpine) | `16-alpine` | Banco de dados principal com suporte transacional estrito |
 | **Qualidade Backend** | Ruff / Mypy / Pytest | `>=0.1.0` / `>=1.5.0` / `>=7.4.0` | Linter ultra-rápido, checagem estática de tipos e testes automatizados |
 | **Qualidade Frontend** | ESLint / Next Lint | `^8.0.0` / `^14.0.0` | Padronização e qualidade de código React/Next.js |
-| **Containers** | Docker & Docker Compose | Compose file v3.8 | Orquestração do ambiente de desenvolvimento local isolado |
+| **Containers** | Docker & Docker Compose | Versões a validar | Orquestração do ambiente de desenvolvimento local isolado |
 
 ### 4.2 Princípios Arquiteturais
 
@@ -216,7 +218,7 @@ flowchart TD
    - **Camada de Aplicação (`application/`):** Casos de uso orquestrando domínio e definindo interfaces de portas (repositórios, relógio, disparo de e-mails).
    - **Camada de Adaptadores (`adapters/`):** Implementações concretas de portas usando SQLAlchemy, queries SQL parametrizadas e serviços externos.
    - **Camada de Entrada (`entrypoints/http/`):** Routers FastAPI, serialização Pydantic e middlewares de autenticação/auditoria.
-3. **Vertical Slices no Frontend:** Organização por funcionalidades (`frontend/features/`) correspondentes aos módulos do sistema, facilitando a navegação e coesão.
+3. **VSA pragmática nos dois runtimes:** Fatias por caso de uso dentro de módulos backend por capacidade e funcionalidades em `frontend/features/`; telas não correspondem necessariamente a módulos backend. A árvore de camadas exibida acima é histórica/conceitual, não regra de implementação (ADR-001).
 4. **Idempotência e Determinismo:** O cálculo de pontuação e ranking é função pura dos palpites e resultados oficiais cadastrados. Recálculos repetidos produzem exatamente o mesmo resultado, sem duplicidade de pontos.
 5. **Segurança no Backend:** O frontend nunca é fonte autoritativa de regras temporais ou permissões. O backend impõe autorização e validação de prazos em todas as rotas e consultas.
 
@@ -226,27 +228,23 @@ flowchart TD
 
 ```text
 bolaoCopaFifa2027/
-├── .agents/                 # Workflows e skills para agentes de IA autônomos
 ├── .claude/                 # Configurações, comandos e skills para o Claude Code
 │   ├── commands/opsx/       # Comandos do fluxo OpenSpec (/opsx:*)
 │   └── skills/              # Skills OpenSpec (apply, archive, explore, propose, sync, update)
-├── .kiro/                   # Prompts e configurações do ecossistema Kiro
-├── .opencode/               # Comandos e skills OpenSpec para OpenCode
-├── .roo/                    # Comandos e skills OpenSpec para Roo Code
 ├── backend/                 # Aplicação Backend (FastAPI / Python 3.11+)
 │   ├── app/
-│   │   ├── bootstrap/       # Inicialização, composição e injeção de dependências (.gitkeep)
+│   │   ├── bootstrap/       # Inicialização, composição e injeção de dependências (contém `main.py`)
 │   │   ├── entrypoints/     # Adaptadores de entrada HTTP (routers FastAPI, schemas) (.gitkeep)
 │   │   │   └── http/
 │   │   ├── modules/         # Módulos de domínio DDD (Clean Architecture)
-│   │   │   ├── gamification/   # Gamificação e badges (aguarda aprovação PROD-06)
+│   │   │   ├── gamification/   # Gamificação e badges (PROD-06 aprovada; pendências 06.5/06.6)
 │   │   │   ├── identity/       # Autenticação, usuários, papéis e recuperação de senha
 │   │   │   ├── predictions/    # Cadastro, validação de cutoff e consulta de palpites
 │   │   │   ├── ranking/        # Projeções, histórico e critérios de desempate
 │   │   │   ├── scoring/        # Cálculo puro de pontos e apuração de partidas
 │   │   │   ├── support/        # Chamados de atendimento a participantes
 │   │   │   └── tournament/     # Seleções, grupos, calendário e chaveamento
-│   │   │       └── [cada módulo contém: domain/, application/, adapters/]
+│   │   │       └── [scaffold de camadas vazias; VSA por caso de uso aprovada, a criar em change própria]
 │   │   └── shared/          # Primitivas comuns (relógio confiável, IDs, erros base) (.gitkeep)
 │   ├── migrations/          # Scripts de migração de banco com Alembic (.gitkeep)
 │   ├── tests/               # Suíte de testes automatizados do backend
@@ -257,18 +255,17 @@ bolaoCopaFifa2027/
 │   ├── Dockerfile           # Build multi-stage para runtime FastAPI
 │   ├── pyproject.toml       # Dependências, configurações do Ruff, Mypy e Pytest
 │   └── README.md            # Documentação técnica específica do backend
-├── docker/                  # Configurações adicionais de container (atualmente vazio)
 ├── docs/                    # Documentação canônica do projeto
 │   ├── architecture/        # Arquitetura de software, revisões e planos
-│   │   ├── arquitetura-software.md           # Proposta arquitetural v0.3
+│   │   ├── arquitetura-software.md           # Proposta arquitetural v0.4 (ADR-001)
 │   │   ├── plano-reestruturacao-documentacao.md # Plano de auditoria executado
 │   │   └── revisao-arquitetura-multiagentes.md  # Revisão multiagentes e consolidação
 │   └── requirements/        # Requisitos e decisões do produto
-│       ├── decisoes-pendentes.md              # Registro canônico de decisões v1.2
-│       ├── PROD-06-criterios-badges-gamificacao.md # Proposta de badges (aguarda aprovação)
-│       └── requisitos-bolao-copa-mundo-feminina-2027.md # Fonte normativa v3.2
+│       ├── decisoes-pendentes.md              # Registro canônico de decisões v1.5
+│       ├── PROD-06-criterios-badges-gamificacao.md # Critérios de badges (aprovados em 19/10/2026; pendências 06.5/06.6)
+│       └── requisitos-bolao-copa-mundo-feminina-2027.md # Fonte normativa v3.4
 ├── frontend/                # Aplicação Frontend (Next.js 14 / TypeScript)
-│   ├── app/                 # App Router (layouts, páginas, error/loading states) (.gitkeep)
+│   ├── app/                 # App Router (layouts, páginas, error/loading states) (`layout.tsx`, `page.tsx`, `loading.tsx`, `not-found.tsx`)
 │   ├── components/          # Componentes visuais acessíveis e reutilizáveis (.gitkeep)
 │   ├── features/            # Fatias verticais por funcionalidade (.gitkeep)
 │   ├── lib/
@@ -349,7 +346,7 @@ flowchart TB
 
 - **Rede interna:** Os containers comunicam-se pela rede bridge `bolao-network`. O backend conecta-se ao banco pelo hostname `db:5432`. O navegador do desenvolvedor acessa o frontend em `localhost:3000` e a API em `localhost:8000`.
 - **Ordem de inicialização e prontidão:** O Compose define a ordem `frontend -> backend -> db`.
-  > **Nota de diagnóstico:** Atualmente não há blocos `healthcheck` formais configurados no `docker-compose.yml`. Como o PostgreSQL pode levar alguns segundos para aceitar conexões no primeiro início, recomenda-se adicionar `healthcheck` em evolução futura (TEC-02).
+  > **Nota de diagnóstico:** O `docker-compose.yml` define blocos `healthcheck`. O do backend foi alinhado em 19/10/2026 à rota `/live` de `backend/app/bootstrap/main.py`, mas **nenhum build ou `docker compose up` foi executado**; a validação real é tarefa da change `2026-10-18-technical-foundation`.
 - **Persistência de dados:** O volume nomeado `postgres_data` armazena os dados do PostgreSQL.
   - `docker compose down` encerra os containers e **preserva** o volume com os dados.
   - `docker compose down -v` encerra os containers e **exclui permanentemente** o volume `postgres_data`.
@@ -358,7 +355,7 @@ flowchart TB
 
 ### 6.4 Variáveis de Ambiente (`.env.example`)
 
-Copie o arquivo de exemplo antes de iniciar:
+O `.env.example` é um modelo para a configuração futura. O Compose ainda define diretamente variáveis para os serviços e não repassa automaticamente os valores de `.env` ao frontend e ao backend; copiar o arquivo não altera, por si só, credenciais, URLs ou configurações da aplicação. A integração das variáveis deve ser decidida e validada antes de depender dela.
 
 ```bash
 cp .env.example .env
@@ -377,7 +374,7 @@ cp .env.example .env
 | `POSTGRES_PASSWORD` | `postgres` | Senha de desenvolvimento do PostgreSQL |
 | `POSTGRES_HOST` | `db` | Host do banco dentro da rede Docker |
 | `POSTGRES_PORT` | `5432` | Porta interna do banco |
-| `DATABASE_URL` | `postgresql://postgres:postgres@db:5432/bolao` | String de conexão para o SQLAlchemy / asyncpg |
+| `DATABASE_URL` | `postgresql://postgres:postgres@db:5432/bolao` | Exemplo ainda não validado; selecionar driver e configurar URL compatível com a direção síncrona do ADR-001 |
 | `TZ` | `America/Sao_Paulo` | Fuso horário oficial padronizado (Horário de Brasília / UTC-3) |
 
 ### 6.5 Compatibilidade Windows 11 com WSL 2 / Ubuntu
@@ -407,12 +404,9 @@ Para desenvolvedores no Windows 11 com Docker Desktop e WSL 2:
    cd bolaoCopaFifa2027
    ```
 
-2. **Prepare as variáveis de ambiente:**
-   ```bash
-   cp .env.example .env
-   ```
+2. **Consulte o modelo de variáveis de ambiente:** `.env.example` descreve valores de desenvolvimento, mas o Compose ainda não os repassa aos serviços. Se precisar de uma cópia local, use `cp .env.example .env`; não presuma que editar `.env` alterará o comportamento dos containers.
 
-3. **Construa e inicie os containers:**
+3. **Após validação da fundação técnica, construa e inicie os containers:** os comandos abaixo são referências para a etapa de validação pelo time; o build e a inicialização ainda não foram executados neste projeto.
    ```bash
    docker compose up --build
    ```
@@ -435,7 +429,7 @@ Para desenvolvedores no Windows 11 com Docker Desktop e WSL 2:
 | **Documentação OpenAPI** | [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger interativo da API |
 | **PostgreSQL** | `localhost:5432` | Conexão externa via clientes de banco (DBeaver, psql) |
 
-> ⚠️ **Aviso de Estado Inicial (Scaffold):** O `Dockerfile` do backend foi configurado para executar `app.bootstrap.main:app`. Como o repositório está em fase de scaffold e este arquivo ainda não foi criado, a inicialização completa do container FastAPI aguarda a implementação do entrypoint básico de bootstrap (ver [Seção 11](#11-próximos-passos)).
+> ⚠️ **Aviso de Estado Inicial (Scaffold):** O `Dockerfile` do backend foi configurado para executar `app.bootstrap.main:app`. O arquivo existe e expõe `/`, `/live` e `/ready`. O Dockerfile do backend ainda não foi validado por build (ver [Seção 11](#11-próximos-passos)).
 
 ### 7.4 Comandos Operacionais Úteis
 
@@ -473,7 +467,7 @@ O projeto adota formalmente o fluxo **SDD (Spec-Driven Development)** via **Open
 ```mermaid
 flowchart LR
   subgraph Fase1["1. Alinhamento"]
-    REQ["Requisitos v3.2 &\nDecisões Pendentes"]
+    REQ["Requisitos v3.4 &\nDecisões Pendentes"]
     CLAUDE["CLAUDE.md &\nRegras do Projeto"]
     REQ --> SPEC
     CLAUDE --> SPEC
@@ -508,7 +502,7 @@ flowchart LR
 
 ### 8.2 Passo a Passo do Desenvolvedor
 
-1. **Consulte a documentação:** Abra `CLAUDE.md`, os [Requisitos v3.2](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md) e as [Decisões Pendentes](docs/requirements/decisoes-pendentes.md).
+1. **Consulte a documentação:** Abra `CLAUDE.md`, os [Requisitos v3.4](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md) e as [Decisões Pendentes](docs/requirements/decisoes-pendentes.md).
 2. **Crie a proposta de mudança:** Utilize o comando OpenSpec `/opsx:propose <nome-da-mudanca>` para criar a estrutura em `openspec/changes/`.
 3. **Elabore o delta de especificação:** Detalhe `proposal.md`, `design.md` e `tasks.md`, vinculando os requisitos e as decisões impactadas.
 4. **Obtenha aprovação humana:** Apresente o plano para o responsável técnico/produto. Nenhuma linha de código deve ser alterada antes da aprovação.
@@ -575,10 +569,10 @@ Toda a documentação especializada reside no diretório `docs/` e na raiz. Util
 
 | Documento | Caminho Relativo | Finalidade e Quando Consultar |
 |---|---|---|
-| **Requisitos do Produto** | [`docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md) | **Fonte normativa v3.2.** Consultar para regras de pontuação, desempates, prazos, fuso horário e histórias de usuário. |
-| **Decisões Pendentes** | [`docs/requirements/decisoes-pendentes.md`](docs/requirements/decisoes-pendentes.md) | **Registro canônico v1.2.** Consultar para o status de decisões PROD, TEC, OPS e lacunas residuais abertas. |
-| **Proposta de Gamificação** | [`docs/requirements/PROD-06-criterios-badges-gamificacao.md`](docs/requirements/PROD-06-criterios-badges-gamificacao.md) | Catálogo preliminar de badges. **Não implementar** concessão automática até aprovação formal. |
-| **Arquitetura de Software** | [`docs/architecture/arquitetura-software.md`](docs/architecture/arquitetura-software.md) | **Proposta arquitetural v0.3.** Consultar para padrões DDD, limites de camadas, modelo conceitual de dados e segurança. |
+| **Requisitos do Produto** | [`docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md) | **Fonte normativa v3.4.** Regras v3.2 preservadas; HU-22 exige reverificação do endereço local alterado e limita a três tentativas por verificação; HU-23 cobre o retorno Google de identidade já vinculada. |
+| **Decisões Pendentes** | [`docs/requirements/decisoes-pendentes.md`](docs/requirements/decisoes-pendentes.md) | **Registro canônico v1.5.** Consultar status PROD, TEC, OPS, lacunas do primeiro vínculo e direções arquiteturais aprovadas. |
+| **Proposta de Gamificação** | [`docs/requirements/PROD-06-criterios-badges-gamificacao.md`](docs/requirements/PROD-06-criterios-badges-gamificacao.md) | Catálogo de badges aprovado em 19/10/2026. A implementação segue OpenSpec; seguem bloqueadas as partes que dependem de resultado definitivo (PROD-06.5), partidas canceladas (PROD-06.6) e reabertura de prazo. |
+| **Arquitetura de Software** | [`docs/architecture/arquitetura-software.md`](docs/architecture/arquitetura-software.md) | **Proposta v0.4**, alinhada às direções aprovadas em [ADR-001](docs/architecture/decisoes-tecnicas/ADR-001-vsa-monorepo-e-persistencia.md); detalhes técnicos ainda exigem design. |
 | **Revisão Multiagentes** | [`docs/architecture/revisao-arquitetura-multiagentes.md`](docs/architecture/revisao-arquitetura-multiagentes.md) | Relatório da auditoria técnica que consolidou o monólito modular e descartou microserviços/filas prematuras. |
 | **Plano de Reestruturação** | [`docs/architecture/plano-reestruturacao-documentacao.md`](docs/architecture/plano-reestruturacao-documentacao.md) | Histórico e rastreabilidade da harmonização documental executada no projeto. |
 | **Instruções para Claude Code** | [`CLAUDE.md`](CLAUDE.md) | **Ponto de entrada operacional canônico para agentes.** Define precedência, limites de execução e comandos. |
@@ -592,19 +586,19 @@ Toda a documentação especializada reside no diretório `docs/` e na raiz. Util
 
 Para o desenvolvedor que inicia no projeto, os itens prioritários de implementação e resolução técnica são:
 
-1. **Implementar o entrypoint de bootstrap do Backend (`backend/app/bootstrap/main.py`):**
-   - Criar a instância inicial do `FastAPI()`, configuração básica de CORS para a porta 3000 e endpoint de healthcheck (`GET /health`), permitindo que o container suba sem erros.
-2. **Implementar a casca inicial do Frontend (`frontend/app/`):**
-   - Criar `layout.tsx` raiz e `page.tsx` com visualização básica do projeto.
+1. **Validar o backend e definir o `/ready` (`backend/app/bootstrap/main.py`, `backend/Dockerfile`):**
+   - Validar a instalação não editável e o build; após escolher driver e estilo de sessão, fazer `/ready` verificar a conectividade com o banco.
+2. **Validar a casca inicial do frontend (`frontend/`):**
+   - O lockfile foi gerado sem instalar dependências, e a configuração do ESLint e o estágio de desenvolvimento estão preparados; executar instalação, build e lint na etapa de validação.
 3. **Inicializar o Alembic e as migrações iniciais (`backend/migrations/`):**
-   - Configurar `alembic.ini` e `env.py` para conectar via `DATABASE_URL` assíncrona.
-   - Criar as primeiras tabelas do módulo `identity` (usuários) e `tournament` (seleções e partidas).
+   - Projetar a direção síncrona aprovada no ADR-001; escolher driver compatível, ajustar manifesto/`DATABASE_URL` e configurar `alembic.ini` e `env.py` após aprovação da change pertinente.
+   - Criar tabelas de domínio apenas nas changes funcionais pertinentes e após as decisões de modelo de dados.
 4. **Detalhar a decisão técnica PROD-01 (Timestamp Confiável):**
    - Definir a estratégia exata de captura do timestamp de ingresso pelo servidor antes do cutoff ($T - 1\text{h}$) e validação de concorrência com locks no PostgreSQL.
-5. **Aprimorar o `docker-compose.yml` (TEC-02):**
-   - Adicionar blocos de `healthcheck` para PostgreSQL e backend, assegurando que o frontend só inicie após a prontidão da API.
-6. **Definir autenticação e fluxo de admissão (TEC-01 / PROD-07):**
-   - Estruturar a estratégia de coexistência entre login Google OAuth e conta local com senha, e o fluxo administrativo de liberação de participantes.
+5. **Validar o `docker-compose.yml` (TEC-02):**
+   - O healthcheck do backend aponta para `/live`; validar em execução o build, a inicialização e a prontidão real após decisão sobre o banco. `docker compose config --quiet` verifica apenas a configuração.
+6. **Especificar vínculo e admissão (HU-22/23 / TEC-01 / PROD-07):**
+   - A correspondência Google/local por e-mail, a verificação do endereço local novo ou alterado por código de seis dígitos, até três tentativas por verificação e o retorno por Google da identidade já vinculada estão decididos. Fechar prova de controle no primeiro vínculo, colisões, efeitos da mudança de endereço, validade, reenvio/reinício de tentativas e sequência da aprovação administrativa na change proposta `2026-10-19-identity-email-link`; não confundir com recuperação de senha HU-21.
 
 ---
 

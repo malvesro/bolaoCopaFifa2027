@@ -1,21 +1,21 @@
 # Arquitetura de Software — Bolão da Copa do Mundo Feminina da FIFA Brasil 2027
 
-**Versão:** 0.3 (revisão arquitetural recomendada)
-**Elaboração:** 18/10/2026
-**Status:** Proposta arquitetural; não equivale a aprovação formal de cada escolha técnica. Restrições definidas para o escopo atual e recomendações ainda sujeitas a aprovação estão identificadas separadamente.
-**Fonte primária do produto:** [requisitos v3.2](../requirements/requisitos-bolao-copa-mundo-feminina-2027.md), de 18/10/2026.
+**Versão:** 0.4 (alinhamento das direções aprovadas em 19/10/2026)
+**Elaboração:** 18/10/2026; atualização: 19/10/2026
+**Status:** Proposta arquitetural com direções aprovadas delimitadas no [ADR-001](decisoes-tecnicas/ADR-001-vsa-monorepo-e-persistencia.md). Demais mecanismos e detalhes deste documento permanecem recomendações até decisão específica.
+**Fonte primária do produto:** [requisitos v3.4](../requirements/requisitos-bolao-copa-mundo-feminina-2027.md), de 19/10/2026 (regras v3.2 preservadas).
 
-> Este documento reúne restrições de escopo e recomendações arquiteturais; não descreve componentes implementados nem aprova regras de produto. As regras aprovadas permanecem na [fonte de requisitos](../requirements/requisitos-bolao-copa-mundo-feminina-2027.md). O desenvolvimento local será via Docker Compose em Windows 11 com WSL 2/Ubuntu ou ambiente Linux; produção não é presumida como idêntica e GCP não está selecionado. O [registro de decisões pendentes](../requirements/decisoes-pendentes.md) é a fonte canônica para pendências de produto, operação e processo; não há registro paralelo nesta arquitetura.
+> Este documento reúne restrições de escopo, as direções aprovadas no ADR-001 e recomendações arquiteturais; não descreve componentes implementados nem aprova regras de produto. As regras aprovadas permanecem na [fonte de requisitos](../requirements/requisitos-bolao-copa-mundo-feminina-2027.md). O desenvolvimento local será via Docker Compose em Windows 11 com WSL 2/Ubuntu ou ambiente Linux; produção não é presumida como idêntica e GCP não está selecionado. O [registro de decisões pendentes](../requirements/decisoes-pendentes.md) é a fonte canônica para pendências de produto, operação e processo; não há registro paralelo nesta arquitetura.
 
 ## 1. Resumo executivo
 
-A topologia local obrigatória é Docker Compose com serviços separados para frontend Next.js/TypeScript, API FastAPI/Python e PostgreSQL, e volumes locais para dados que precisam sobreviver à recriação de containers (incluindo os dados PostgreSQL). O ambiente suportado inclui Windows 11 com Docker Desktop e WSL 2/Ubuntu, além de WSL 2/Linux. O Dev Container no VS Code pode ser usado, mas não é obrigatório. Volumes locais não constituem backup. A configuração ainda não existe e compatibilidade precisa ser verificada.
+A topologia local obrigatória é Docker Compose com serviços separados para frontend Next.js/TypeScript, API FastAPI/Python e PostgreSQL, e volumes locais para dados que precisam sobreviver à recriação de containers (incluindo os dados PostgreSQL). O ambiente suportado inclui Windows 11 com Docker Desktop e WSL 2/Ubuntu, além de WSL 2/Linux. O Dev Container no VS Code pode ser usado, mas não é obrigatório. Volumes locais não constituem backup. Existe um scaffold de Compose (`docker-compose.yml`, `.env.example` e Dockerfiles), ainda não validado por execução; a compatibilidade precisa ser verificada.
 
 A arquitetura deve facilitar portabilidade futura ao GCP, mas implantação e gerenciamento de recursos GCP não fazem parte do projeto. Não se prescrevem Cloud Run, Cloud SQL, CI/CD de produção, operação de nuvem, objetivos de recuperação nem serviços gerenciados como entregáveis.
 
-As propriedades críticas permanecem integridade temporal e privacidade dos palpites, apuração idempotente, auditoria administrativa e ranking determinístico. Validações de domínio pertencem ao backend. Os modos de autenticação previstos são conta Google e identidade local, com detalhes de associação, sessão e recuperação ainda a especificar.
+As propriedades críticas permanecem integridade temporal e privacidade dos palpites, apuração idempotente, auditoria administrativa e ranking determinístico. Validações de domínio pertencem ao backend. Conta Google e identidade local usam correspondência por e-mail para o primeiro vínculo, após verificação do endereço local novo ou alterado por código numérico de seis dígitos enviado ao endereço, com até três tentativas por verificação (HU-22). Identidade Google já vinculada pode voltar a autenticar a conta validada, reconhecida por `sub` (HU-23). Fluxo seguro do primeiro vínculo e detalhes de sessão ainda exigem especificação; HU-21 mantém recuperação separada.
 
-Não há código de aplicação, dependências, Compose, dados de partidas ou comandos de build/teste confirmados no repositório. Esta documentação não cria esses artefatos nem implementa funcionalidades.
+Em 19/10/2026 existem apenas scaffold (entrypoint de healthcheck, manifests de dependências, Compose e Dockerfiles); não há regra de negócio implementada, dados de partidas, testes nem comandos de build/teste confirmados por execução. Esta documentação não cria esses artefatos nem implementa funcionalidades.
 
 ## 2. Objetivo e escopo
 
@@ -27,7 +27,7 @@ Incluem-se decisões e recomendações de arquitetura para desenvolvimento local
 
 ### Fontes do projeto
 
-1. `docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`, versão 3.2, 18/10/2026 — fonte canônica para regras do produto.
+1. `docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`, versão 3.4, 19/10/2026 — fonte canônica; complementa HU-22 e acrescenta HU-23 às regras v3.2 preservadas.
 2. Prompt histórico de elaboração arquitetural (preservado no histórico Git anterior à reestruturação documental) — orientou a análise inicial; não é instrução vigente nem aprovação de decisões técnicas.
 3. `docs/requirements/decisoes-pendentes.md` — registro das decisões e lacunas residuais.
 4. `openspec/config.yaml` e estrutura do repositório — configuração `spec-driven`; OpenSpec é obrigatório para especificação, planejamento e evolução SDD neste projeto, com governança manual. Os comentários explicativos foram alinhados nesta atualização documental; não houve alteração do schema nem do comportamento.
@@ -60,7 +60,7 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 
 ### Funcionais
 
-- Cadastro, autenticação, alteração e recuperação de senha por e-mail, com token único de duração entre 30 e 60 minutos conforme regra aprovada e resposta que não revela se o e-mail está cadastrado.
+- Cadastro, autenticação, alteração e recuperação de senha por e-mail, com token único de duração entre 30 e 60 minutos conforme HU-21. Para o primeiro vínculo Google/local por e-mail, verificar o endereço local novo ou alterado pelo código de seis dígitos da HU-22, com até três tentativas por verificação; a identidade Google já vinculada retorna por `sub` conforme HU-23. Não confundir os fluxos nem dispensar admissão administrativa.
 - Palpites inteiros não negativos, editáveis até uma hora antes do kickoff oficial vigente; requisições recebidas no cutoff ou depois são rejeitadas, embora as recebidas antes possam concluir depois. A publicação aguarda gravações elegíveis em andamento; alteração oficial do kickoff pode reabrir a janela, período em que novas consultas alheias ficam ocultas até o novo cutoff.
 - Administração de calendário, seleções/classificação de mata-mata, resultados oficiais e correções auditáveis.
 - Pontuação 6/3/2/1/0, explicação de pontos, ranking com quatro critérios além de pontos totais, visão rodada a rodada, grupos/chaveamento, estatísticas/badges e chamados de suporte.
@@ -76,8 +76,8 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 
 - Grupo único; não adicionar tenant/ligas independentes.
 - Stack obrigatória neste escopo: Next.js/TypeScript, FastAPI/Python e PostgreSQL, em serviços separados no Docker Compose local. Versões continuam por selecionar. Windows 11 com Docker Desktop/WSL 2/Ubuntu e WSL 2/Linux são ambientes a suportar; a compatibilidade ainda não foi validada. Produção não é presumida idêntica ao desenvolvimento e GCP não está selecionado.
-- Nenhum código fonte, manifesto de dependências, README, configuração de build, Compose, CI ou dado oficial de partidas foi encontrado. Não existem comandos de build/teste confirmados.
-- OpenSpec é obrigatório para especificação, planejamento e evolução SDD, com governança manual. `openspec/config.yaml` mantém `schema: spec-driven`; comentários explicativos alinhados nesta atualização documental. Ainda não há specs nem mudanças registradas.
+- Na análise de 18/10/2026 nada disso existia; em 19/10/2026 há scaffold (entrypoint, manifests, READMEs, Compose e Dockerfiles). Continuam ausentes CI, testes, dado oficial de partidas e comandos de build/teste confirmados.
+- OpenSpec é obrigatório para especificação, planejamento e evolução SDD, com governança manual. `openspec/config.yaml` mantém `schema: spec-driven`; comentários explicativos alinhados nesta atualização documental. Ainda não há specs-base; existe a change proposta `2026-10-18-technical-foundation` em `openspec/changes/`, sem aprovação formal registrada.
 - Requisito define BRT como UTC-3 permanente e todas as exibições neste fuso. Recomenda-se armazenar instantes em UTC e apresentar com offset fixo UTC-03:00 conforme requisito; mudanças oficiais de calendário devem ser atualizações de dados auditáveis, não suposições em código.
 - Não se assume volume de usuários, orçamento, disponibilidade, residência de dados, fornecedor de e-mail ou equipe de operação. Não há backup/recuperação no escopo decidido.
 
@@ -85,13 +85,13 @@ Não foram acessadas páginas específicas de versões suportadas, preços, Clou
 
 ### Definido na fonte de requisitos
 
-O requisito v3.2 é a fonte normativa para placar de mata-mata ao final de 120 minutos sem gols de pênaltis, corte de uma hora e semântica de recepção, publicação após conclusão das gravações elegíveis, sete rodadas, pontuação, ranking corrente e ordem dos critérios de desempate, grupo único e escopo excluído. Recuperação por token único de 30 a 60 minutos e resposta anti-enumeração também estão definidos. Não flexibilizar regras por conveniência técnica. Permanecem abertas as políticas para partidas suspensas/abandonadas/retomadas e alguns efeitos de cancelamento, descritos no [registro canônico de decisões pendentes](../requirements/decisoes-pendentes.md). Os resumos e exemplos desta arquitetura são contextuais; em caso de divergência, prevalece o requisito aprovado.
+O requisito v3.4 preserva da v3.2 o placar de mata-mata ao final de 120 minutos sem gols de pênaltis, corte de uma hora e semântica de recepção, publicação após conclusão das gravações elegíveis, sete rodadas, pontuação, ranking corrente e ordem dos critérios de desempate, grupo único e escopo excluído. Recuperação por token único de 30 a 60 minutos e resposta anti-enumeração (HU-21) também permanecem definidos; HU-22 exige reverificação do endereço local alterado por código de seis dígitos, com até três tentativas por verificação, e HU-23 permite retorno de identidade Google já vinculada por `sub`. Não flexibilizar regras por conveniência técnica. Permanecem abertas as políticas para partidas suspensas/abandonadas/retomadas e alguns efeitos de cancelamento, descritos no [registro canônico de decisões pendentes](../requirements/decisoes-pendentes.md). Os resumos e exemplos desta arquitetura são contextuais; em caso de divergência, prevalece o requisito aprovado.
 
 ### Direção definida e recomendações
 
 **Definido neste escopo:** stack Next.js/TypeScript, FastAPI/Python e PostgreSQL; execução local por Compose em serviços separados com persistência local; monólito modular, DDD pragmático, Clean Architecture, organização por funcionalidades e OpenSpec obrigatório para SDD. Windows 11 com WSL 2/Ubuntu também deve ser suportado.
 
-**Recomendado, sujeito a aprovação técnica:** cálculo por casos de uso idempotentes, dados oficiais versionados/auditados e projeções derivadas reconstruíveis. Não introduzir fila, cache distribuído ou microserviços sem necessidade mensurável. Os detalhes de módulos, schema, locks e operação descritos neste documento são recomendações, não regras de produto.
+**Direção aprovada em 19/10/2026 (ADR-001):** `backend/` e `frontend/` no mesmo repositório, toolchains separados, módulos backend por capacidade com fatias verticais por caso de uso e domínio proprietário sem duplicação de invariantes; contratos de API entre runtimes. SQLAlchemy síncrono, recálculo coerente síncrono inicialmente e sessão opaca revogável no servidor são pontos de partida sujeitos a design/validação. Pontuação, ranking e badges são derivados reconstruíveis. **Ainda sujeitos a decisão e prova:** nomes de arquivos, APIs entre módulos, driver/URL, schema, locking, cookie/CSRF, desempenho e casos excepcionais de produto. Não introduzir fila, cache distribuído ou microserviços sem necessidade mensurável.
 
 ### Pendências de produto, operação e processo
 
@@ -102,7 +102,7 @@ Ver seção 22 e o registro canônico. Recomendações técnicas permanecem reco
 1. **Integridade e justiça:** mesma regra e mesmo instante autoritativo para todas as gravações; resultados e cálculos reproduzíveis.
 2. **Confidencialidade:** palpites não são recuperáveis por participante alheio antes do corte, inclusive por APIs alternativas, cache, logs ou consultas agregadas.
 3. **Auditabilidade:** autor, momento, motivo e valores anteriores/novos de ações administrativas; capacidade de reproduzir projeções.
-4. **Simplicidade operacional:** um backend modular, um banco gerenciado e sem infraestrutura distribuída prematura.
+4. **Simplicidade operacional:** um backend modular, um PostgreSQL local no Compose e sem infraestrutura distribuída prematura; banco gerenciado somente seria avaliado em escopo futuro.
 5. **Testabilidade:** regras puras isoladas de HTTP/ORM; testes integrados com PostgreSQL para semântica transacional.
 6. **Usabilidade inclusiva:** interfaces responsivas, acessíveis, com erros e prazos explícitos; datas sempre no fuso definido.
 7. **Evolução segura:** mudanças de requisitos e schema revisadas e migradas incrementalmente.
@@ -135,13 +135,13 @@ flowchart TB
   DEV[Desenvolvedor / VS Code opcionalmente com Dev Container] --> B
 ```
 
-A topologia representa serviços separados via Docker Compose para frontend, backend e banco. Os volumes locais servem à persistência do ambiente de desenvolvimento/testes; políticas exatas de montagem, nomes e ciclo de vida serão definidas ao criar a configuração, que não faz parte desta atualização documental. O volume do banco preserva dados entre reinicializações normais, mas não protege contra exclusão, corrupção ou perda do armazenamento e não é backup.
+A topologia representa serviços separados via Docker Compose para frontend, backend e banco. Os volumes locais servem à persistência do ambiente de desenvolvimento/testes; políticas exatas de montagem, nomes e ciclo de vida serão definidas e validadas na change `2026-10-18-technical-foundation`; o `docker-compose.yml` atual é scaffold. O volume do banco preserva dados entre reinicializações normais, mas não protege contra exclusão, corrupção ou perda do armazenamento e não é backup.
 
 GCP é somente um possível destino de portabilidade. Não há diagrama de produção aprovado nem atividade de implantação/gestão GCP prevista nesta arquitetura.
 
 ## 9. Arquitetura recomendada e alternativas
 
-**Recomendação:** monólito modular no serviço Python, executado localmente como serviço de backend separado do frontend e do PostgreSQL via Docker Compose. Módulos compartilham deployment do backend e banco, mas mantêm autoridade e dependências explícitas. Casos de uso coordenam operações entre módulos; não se introduz RPC interno.
+**Direção aprovada (ADR-001):** monólito modular no serviço Python, executado localmente como serviço de backend separado do frontend e do PostgreSQL via Docker Compose. Módulos compartilham deployment do backend e banco, mas mantêm autoridade e dependências explícitas; casos de uso coordenam operações entre módulos. Fatias por caso de uso pertencem aos módulos, sem transformar cada tela em módulo nem exigir pasta mista Python/TypeScript; não se introduz RPC interno.
 
 **Por quê:** escala e operação de um grupo único não justificam microserviços. Transações PostgreSQL podem simplificar a gravação de palpite/corte e o registro de resultado/auditoria, mas os mecanismos concretos precisam ser validados com concorrência real. Frontend separado atende à topologia local exigida sem particionar artificialmente o domínio.
 
@@ -165,7 +165,7 @@ Cada módulo controla suas invariantes e expõe casos de uso/contratos. As front
 | Apuração e pontuação | Função de pontuação pura e resultado calculado por palpite/versão de resultado | Calcular/recalcular, explicar pontuação, registrar versão do cálculo | Recebe palpites/resultados por contratos; não decide calendário nem identidade. Idempotência por chaves naturais/versões. |
 | Ranking e estatísticas | Agregados e projeções por participante/rodada | Consultar ranking e histórico; explicar desempate; atualizar projeções | Consome dados de apuração e participantes; não muda resultados. Projeção reconstruível. |
 | Suporte | Chamados, protocolo, estado e respostas | Abrir, consultar e administrar chamado | Consulta identidade; acesso restrito ao chamado. Retenção pendente. |
-| Gamificação | Definições e concessões de badges após critérios aprovados | Calcular concessão e exibir badges | A proposta PROD-06 aguarda aprovação; concessão automática permanece bloqueada. Se aprovada, consumir somente fatos necessários de partidas/apuração por contrato; não depender de ranking salvo se um critério aprovado exigir, e não alterar pontos. |
+| Gamificação | Definições e concessões de badges após critérios aprovados | Calcular concessão e exibir badges | PROD-06 considerada aprovada em 19/10/2026; a concessão automática depende de OpenSpec e das lacunas PROD-06.5/06.6 (resultado definitivo, partidas canceladas). Consumir palpites válidos, calendário/rodadas e pontuação por partida por contrato; não depender de ranking e não alterar pontos. |
 
 ### Regras de dependência
 
@@ -177,30 +177,27 @@ Cada módulo controla suas invariantes e expõe casos de uso/contratos. As front
 
 ## 11. Backend Python/FastAPI
 
-Estrutura conceitual (nomes propostos; sem arquivos criados):
+Estrutura conceitual aprovada em **direção**, não como árvore obrigatória de arquivos (módulos existentes no scaffold; fatias/portas a criar conforme casos de uso):
 
 ```text
 backend/
   app/
-    entrypoints/http/        # FastAPI, routers, schemas de transporte, middleware
-    modules/
-      identity/{domain,application,adapters}
-      tournament/{domain,application,adapters}
-      predictions/{domain,application,adapters}
-      scoring/{domain,application,adapters}
-      ranking/{domain,application,adapters}
-      support/{domain,application,adapters}
-      gamification/{domain,application,adapters}
-    shared/                  # primitives realmente comuns, clock, IDs, erros
-    bootstrap/               # composição/configuração por ambiente
-  tests/{unit,integration,api,contract}
+    bootstrap/                # composição/configuração por ambiente
+    modules/<capacidade>/
+      slices/<caso_de_uso>/   # fluxo vertical com entrada, aplicação e saída necessárias
+      domain/                 # invariantes compartilhadas quando houver regra própria
+      public_api.py           # exemplo de contrato público; nome a definir em design
+    shared/                   # somente primitivas efetivamente compartilhadas
+  tests/                      # integração/API/contrato; unitários próximos às fatias quando útil
 ```
 
-- **Domínio:** objetos/valores e políticas puras (pontuação, estado de janela), sem ORM nem framework.
-- **Aplicação:** casos de uso e limites transacionais (gravar palpite, alterar calendário, lançar resultado, recalcular, consultar ranking); define portas.
+`backend/app/entrypoints/http/` e as pastas de camadas já presentes são scaffold, **não** exigência de concentrar todos os routers em uma camada nem de replicar três subcamadas por módulo. A capacidade dona de resultados oficiais/auditoria e a localização da política temporal exigem design antes de criar novas pastas.
+
+- **Domínio:** invariantes proprietárias puras (pontuação, estado de janela), sem ORM nem framework; fatias chamam o domínio em vez de copiar regra.
+- **Caso de uso:** reúne entradas, política de aplicação, persistência/integração estritamente necessárias e limite transacional; entre módulos, usar contratos explícitos, sem importar internals de outra fatia.
 - **Entrada:** routers FastAPI e modelos Pydantic adaptam HTTP aos casos de uso. Erros de domínio têm mapeamento uniforme e mensagens sem dados sensíveis.
-- **Saída:** repositórios SQLAlchemy, e-mail, relógio e observabilidade implementam portas. Alembic mantém revisões versionadas; avaliar autogeneração, revisar manualmente, testar upgrade e downgrade em ambiente descartável antes de adotar.
-- **Persistência:** SQLAlchemy 2.x é recomendação inicial; escolher síncrono ou assíncrono após prova de compatibilidade e perfil. Não misturar estilos de sessão. Sessões/transações com escopo explícito por caso de uso.
+- **Saída:** repositórios SQLAlchemy, e-mail, relógio e observabilidade implementam portas quando houver necessidade real. Alembic mantém revisões versionadas; avaliar autogeneração, revisar manualmente, testar upgrade e downgrade em ambiente descartável antes de adotar.
+- **Persistência:** SQLAlchemy com sessão síncrona é o ponto de partida aprovado (ADR-001), sujeito a perfil e compatibilidade. `asyncpg` declarado no manifesto e `DATABASE_URL` exemplar ainda não atendem a essa escolha; driver, pacotes, configuração de migração e versões dependem de change e validação. Sessões/transações têm escopo explícito por caso de uso, sem misturar estilos.
 - **Validação:** Pydantic/HTTP valida forma/tipo; domínio valida regras, incluindo gols como inteiros não negativos. Constraints do banco protegem invariantes concorrentes.
 - **Erros:** contrato estável (código e mensagem segura), sem revelar detalhes internos; exceções técnicas são observadas internamente sem PII/senhas/tokens.
 - **Configuração:** variáveis não secretas por ambiente; segredos via gerenciador aprovado. Falha segura se configuração essencial faltar; nunca valores secretos em frontend.
@@ -223,7 +220,7 @@ frontend/
 
 - Preferir App Router e Server Components para renderização/leitura segura quando a topologia permitir. Manter componentes de cliente pequenos, apenas para formulário, contador, interações e APIs do navegador. Nunca serializar em props dados privados alheios ao usuário.
 - Não considerar Server Component/RSC mecanismo de autorização. API aplica autorização em toda requisição; cache de respostas autenticadas/grades de palpites deve ser desabilitado ou segregado de forma comprovada para impedir vazamento entre usuários/estados.
-- A sessão deve usar cookie `HttpOnly`, `Secure`, `SameSite` adequado e proteção CSRF quando aplicável, ou fluxo equivalente decidido após análise de ameaça. Nunca persistir bearer tokens sensíveis em `localStorage` sem decisão de segurança explícita. Detalhes de sessão, associação de contas e compatibilidade do reset com contas Google permanecem pendentes (TEC-01).
+- Sessão opaca revogável no servidor é a direção aprovada (ADR-001); definir cookie `HttpOnly`, `Secure`, `SameSite` e CSRF conforme topologia e análise de ameaça, sem transportar segredo no bundle nem persistir bearer tokens sensíveis em `localStorage`. Correspondência de e-mail para primeiro vínculo, reverificação do endereço local alterado e até três tentativas por verificação estão definidas (HU-22); retorno de identidade Google já vinculada ocorre por `sub` (HU-23). Prova do primeiro vínculo, reenvio/reinício de tentativas e compatibilidade do reset com contas Google permanecem pendentes (TEC-01).
 - Chamada de API centralizada, tipos de contrato e mapeamento de erro previsível. Estados explícitos de carregamento, erro, vazio e sucesso. Formulário valida no cliente por UX e no backend por segurança.
 - Estado local para interações; não adotar store global sem necessidade comprovada. Dados autoritativos sempre carregados da API.
 - Datas formatadas com UTC-03:00 conforme requisito, sem confiar no timezone do dispositivo. Contador é informativo; servidor decide corte.
@@ -241,10 +238,11 @@ Modelo lógico inicial; não equivale a schema aprovado nem migração.
 - **OfficialResult/ResultRevision:** partida, placar de 120 minutos, estado de apuração, autor, momento e revisão. Tratar valores de pênaltis separadamente apenas se houver necessidade de exibição; não entram na função de pontuação. Correções administrativas são sempre permitidas com revisão e auditoria (PROD-04); o estado/mensagem de encerramento da apuração ainda precisa de definição.
 - **ScoreCalculation:** palpite, revisão do resultado e versão do algoritmo, pontos e categoria explicativa. Chave única por palpite+revisão+versão torna repetição idempotente; alternativa é substituir projeção vigente mantendo evento histórico. Decidir retenção/volume ao projetar.
 - **RoundRankingSnapshot/RankingProjection:** rodada, versão de cálculo, participante, totais e métricas de desempate, opcionalmente fotografia. Deve ser reconstruível a partir de dados fonte e cálculos; não assumir um snapshot imutável antes de definir desempate parcial.
-- **PasswordResetToken:** digest do token (não token em claro), participante, emissão/expiração, utilizado/revogado; uso único com consumo atômico.
+- **PasswordResetToken:** digest do token (não token em claro), participante, emissão/expiração, utilizado/revogado; uso único com consumo atômico conforme HU-21.
+- **Verificação de e-mail local e identidade Google:** separar finalidade e estado da verificação por código numérico de seis dígitos do endereço local novo ou alterado (HU-22), com até três tentativas por verificação, da recuperação HU-21; reconhecer identidade Google já vinculada por `sub` e tratar e-mail como atributo de correspondência mutável. Schema, expiração, reenvio/reinício de tentativas, efeitos da troca de endereço e mecanismo seguro do primeiro vínculo continuam abertos (TEC-01).
 - **SupportTicket/Reply:** protocolo, solicitante, estado, mensagens e timestamps; política de exposição/retention pendente.
 - **AuditEvent:** ator, ação, recurso, timestamp UTC, correlação, motivo e diff mínimo necessário. Não guardar segredos nem duplicar PII sem finalidade.
-- **BadgeDefinition/BadgeGrant:** regras aprovadas e concessão por participante; revogação/recalculo pendentes.
+- **BadgeDefinition/BadgeGrant:** regras aprovadas e concessão por participante; revogação, reativação, recálculo e versionamento de critérios definidos na PROD-06 §7-8; resultado definitivo e partidas canceladas pendentes.
 
 ### Integridade e índices candidatos
 
@@ -258,12 +256,12 @@ Modelo lógico inicial; não equivale a schema aprovado nem migração.
 ## 14. Autenticação e autorização
 
 - Cadastro é aberto, mas requer aprovação administrativa; após aprovação há e-mail de confirmação/liberação. Campos mínimos definidos: nome e e-mail (PROD-07). Usar um papel administrador com privilégios mínimos necessários (PROD-08); fluxo e matriz operacional detalhados permanecem pendentes.
-- Suportar autenticação por conta Google ou identidade local (usuário/senha), sem decisão de fluxo padrão/associação entre contas; TLS obrigatório em produção. Armazenar senha com hash adaptativo aprovado (parâmetros a confirmar na data da implementação), política de recuperação segura, rate limit e reautenticação para ações críticas.
+- Suportar autenticação por conta Google ou identidade local (usuário/senha), vinculáveis por correspondência de e-mail **após verificação do endereço local novo ou alterado pelo código de seis dígitos enviado a ele, com até três tentativas por verificação** (HU-22). Identidade Google já vinculada pode autenticar novamente a conta validada por `sub` (HU-23). Texto coincidente de identidade ainda não vinculada não autoriza acesso automático a conta preexistente: prova de controle, conflitos, efeitos da mudança de e-mail, validade e reenvio/reinício de tentativas exigem decisão TEC-01/PROD-07. TLS obrigatório em produção; hash adaptativo de senha, recuperação segura, controles de tentativa e reautenticação para ações críticas exigem desenho e validação.
 - Recuperação: resposta idêntica e temporalmente semelhante para e-mail existente/inexistente; token aleatório de alta entropia, só digest armazenado, uso único, curta expiração dentro dos 30–60 min definidos, invalidar após uso/alteração, limitar tentativas e não registrar token. Envio assíncrono só após decisão se houver fila; uma chamada simples pode servir ao porte inicial.
 - A autorização é aplicada no backend a cada recurso e ação. Participante acessa/edita o próprio palpite enquanto a requisição for recebida antes do corte vigente; a grade de palpites de todos fica disponível somente após o corte. Não há exceção administrativa individual para alteração pós-corte; pedidos de suporte não alteram palpites. Uma alteração oficial do kickoff recalcula o corte e pode reabrir a janela para todos, conforme PROD-02/05. Administrador tem privilégios mínimos para calendário/resultados/suporte.
 - Um único papel administrador com privilégios mínimos necessários; proteger ações administrativas, aplicar autorização no backend e auditar alterações. Os participantes comuns não veem palpites alheios antes do corte; não presumir bypass administrativo de visibilidade.
 - Administração protegida com autenticação forte apropriada e proteção contra CSRF em sessão baseada em cookie.
-- Sessões com expiração, revogação e renovação definidas; cookies HttpOnly/Secure/SameSite são recomendação se sessão web própria. Detalhes e provedor pendentes.
+- Sessão opaca revogável mantida no servidor é a direção aprovada; expiração, renovação, atributos de cookie, CSRF e efeitos do bloqueio administrativo exigem desenho e testes (TEC-01).
 
 ## 15. Segurança, privacidade e auditoria
 
@@ -285,7 +283,7 @@ Modelo lógico inicial; não equivale a schema aprovado nem migração.
 
 ### Dependente de decisão
 
-Escopo e efeitos de exclusão/anonimização, visibilidade administrativa pré-corte, MFA, associação das contas Google e locais, localização/região de dados, prazo de retenção de logs, resposta a incidentes e classificação de dados. O modo de autenticação Google/local está definido como capacidade requerida (TEC-01), não como escolha de provedor ou fluxo. Não alegar requisitos legais específicos sem determinar jurisdição e análise aplicável.
+Escopo e efeitos de exclusão/anonimização, visibilidade administrativa pré-corte, MFA, confirmação segura do primeiro vínculo Google/local, casos de colisão, efeitos e instante da alteração de e-mail, proteção/expiração do código local, reenvio/reinício de tentativas, localização/região de dados, prazo de retenção de logs, resposta a incidentes e classificação de dados. Correspondência por e-mail para primeiro vínculo, reverificação local e o limite de três tentativas por verificação (HU-22), além do retorno por `sub` da identidade Google já vinculada (HU-23), estão decididos; isso não define vínculo automático, os controles residuais nem detalhes da sessão (TEC-01). Não alegar requisitos legais específicos sem determinar jurisdição e análise aplicável.
 
 ## 16. Palpites, corte e visibilidade
 
@@ -319,7 +317,7 @@ Para eliminatórias, resultado usado é placar ao término dos 120 minutos, incl
 
 ### Recálculo
 
-Manter dados oficiais e palpites como fontes; pontuação/ranking são derivados. Ao publicar/corrigir resultado, em uma transação persistir revisão imutável do resultado e evento de auditoria; recalcular todos os palpites elegíveis para aquela partida, chaveando por palpite + revisão do resultado + versão de regra. O mesmo comando repetido sobre as mesmas entradas deve produzir os mesmos registros (upsert/substituição determinística, sem somar pontos incrementalmente). Recalcular projeção do ranking afetada a partir de scores por partida; publicar versão completa atomicamente para leitores ou recomputar consulta, evitando ranking parcialmente atualizado. Escolha entre cálculo síncrono na transação e job durável depende do volume/necessidade operacional; para 64 jogos e grupo único, começar síncrono é recomendação, desde que limites de latência sejam medidos e a transação seja testada. Não adicionar fila antes de necessidade.
+Manter dados oficiais e palpites como fontes; pontuação, ranking e badges são derivados determinísticos e reconstruíveis (ADR-001). Ao publicar/corrigir resultado, persistir revisão e evento de auditoria e recalcular palpites elegíveis para aquela partida de forma idempotente, sem somar pontos incrementalmente. Publicar ranking coerente, nunca parcialmente atualizado; badges consomem fatos de palpites, calendário e pontuação por partida, não a projeção de ranking. Começar com recálculo transacional síncrono é a direção inicial aprovada para grupo único, **sujeita a medição de latência e teste concorrente**; se a transação não couber, novo desenho e política de apresentação demandam decisão. Não adicionar fila/outbox antes de necessidade.
 
 Se transação extensa causar bloqueios, registrar revisão oficial e cálculo pendente com estado explícito, preservar ranking anterior identificado como defasado e publicar nova versão atômica ao completar; isso exige decisão de apresentação e não deve ser simulado como “tempo real”. Resultado corrigido invalida/reconstrói derivados, não apaga trilha de eventos.
 
@@ -367,7 +365,7 @@ Tecnologias de teste não estão escolhidas. Não há testes implementados nem c
 
 ### Desenvolvimento local
 
-A execução de desenvolvimento obrigatória é Docker Compose com serviços separados para frontend Next.js, backend FastAPI e PostgreSQL. Deve haver volume local para os dados PostgreSQL e para outros dados que precisem sobreviver à recriação dos containers. Arquivo de exemplo de ambiente sem segredos e instruções reproduzíveis de inicialização são entregáveis da futura fundação, não existentes hoje. Dev Container no VS Code é opcional. A configuração Compose e imagens não foram criadas.
+A execução de desenvolvimento obrigatória é Docker Compose com serviços separados para frontend Next.js, backend FastAPI e PostgreSQL. Deve haver volume local para os dados PostgreSQL e para outros dados que precisem sobreviver à recriação dos containers. Arquivo de exemplo de ambiente sem segredos e instruções reproduzíveis de inicialização existem como scaffold (`.env.example`, `docker-compose.yml`, Dockerfiles), ainda não validados por execução; a validação é entregável da fundação. Dev Container no VS Code é opcional.
 
 **Windows 11/WSL 2:** a solução deve funcionar com Docker Desktop e integração WSL 2/Ubuntu, além do uso em WSL 2/Linux. Recomenda-se manter o checkout no filesystem da distribuição WSL para uso pelo Docker integrado; isso é orientação a validar na versão selecionada, não compatibilidade já demonstrada. Documentar caminhos e permissões, bind mounts, file watchers/hot reload, portas publicadas e acesso browser→frontend, rede frontend→API e API→PostgreSQL. Não incluir o banco em portas de host sem necessidade de desenvolvimento justificada.
 
@@ -393,7 +391,7 @@ Configuração por ambiente validada na inicialização; segredos consultados em
 
 O registro canônico de decisões de produto, operação e processo é [`../requirements/decisoes-pendentes.md`](../requirements/decisoes-pendentes.md). Esta arquitetura remete a ele e não mantém lista paralela de decisões.
 
-Permanecem, entre outras, o detalhamento técnico do ponto de recepção confiável e da espera por gravações elegíveis (PROD-01), a sequência operacional de alterações sucessivas de kickoff (PROD-02), os efeitos de cancelamentos e demais partidas excepcionais (PROD-03), o estado e a autorização da apuração (PROD-04), o fluxo de admissão/exclusão (PROD-07/OPS-01), a aprovação de badges (PROD-06), e-mail (OPS-03), ambiente local (TEC-02), identidade/sessão (TEC-01) e baseline/governança/rastreabilidade OpenSpec (TEC-03). Pontuação, ranking corrente, desempates e política de leitura/escrita durante reabertura estão definidos no requisito v3.2. Recomendações arquiteturais não aprovadas não são convertidas em decisões de produto.
+Permanecem, entre outras, o detalhamento técnico do ponto de recepção confiável e da espera por gravações elegíveis (PROD-01), a sequência operacional de alterações sucessivas de kickoff (PROD-02), os efeitos de cancelamentos e demais partidas excepcionais (PROD-03), o estado e a autorização da apuração (PROD-04), o fluxo de admissão/exclusão (PROD-07/OPS-01), as lacunas residuais da PROD-06 (06.5 resultado definitivo, 06.6 partidas canceladas, reabertura de prazo, visibilidade de badges de terceiros e retenção do histórico), e-mail (OPS-03), ambiente local/driver (TEC-02), fluxo seguro do primeiro vínculo e sessão (TEC-01) e baseline/governança/rastreabilidade OpenSpec (TEC-03). HU-22 v3.4 fixa correspondência por e-mail, reverificação do endereço local alterado por código de seis dígitos e até três tentativas por verificação; HU-23 permite retorno da identidade Google já vinculada por `sub`. Nenhuma dessas regras fixa vínculo automático, reenvio/reinício de tentativas ou detalhes da sessão. Pontuação, ranking corrente, desempates e política de leitura/escrita durante reabertura permanecem definidos como na v3.2. ADR-001 delimita direções arquiteturais aprovadas sem criar regras de produto.
 
 Não há exceção administrativa individual pós-corte. Requests recebidos no corte/depois são rejeitados; requests recebidos antes podem concluir após o corte conforme timestamp confiável (PROD-01). Se o kickoff oficial mudar, o corte recalcula e a janela pode reabrir (PROD-02/05). Pontuação, placar válido no mata-mata, visibilidade pós-corte e critérios/ordem de desempate estão definidos no requisito e não são pendências.
 
@@ -411,7 +409,7 @@ Não há exceção administrativa individual pós-corte. Requests recebidos no c
 | Ausência de backup/recuperação | perda de dados sem restauração assegurada | OPS-02: risco aceito no escopo; não alegar restore |
 | E-mail não entregue ou link abusado | usuário perde acesso/conta atacada | OPS-03, selecionar fornecedor externo; token digest/uso único e rate-limit |
 | Configuração OpenSpec ou artefatos confundidos com governança automática | mudanças podem ignorar especificação ou aprovação humana | manter fluxo SDD obrigatório, rastreabilidade e registro de aprovação; governança permanece manual |
-| Critérios de badges e detalhes do fluxo de admissão ainda não aprovados | concessões injustas ou acesso indevido | manter badges automáticas bloqueadas e exigir aprovação administrativa |
+| Lacunas residuais da PROD-06 (resultado definitivo, partidas canceladas, reabertura de prazo) e detalhes do fluxo de admissão ainda abertos | concessões injustas ou acesso indevido | bloquear apenas as badges que dependem dessas lacunas e exigir aprovação administrativa |
 
 ## 24. Estratégia SDD/OpenSpec
 
@@ -427,7 +425,7 @@ Fluxo recomendado, sujeito à formalização do checklist e responsáveis:
 6. Relacionar requisito/decisão → cenário/delta → tarefa → teste ou evidência de validação. Atualizar arquitetura/documentação quando decisões aprovadas mudarem.
 7. Após validação, sincronizar/arquivar conforme o fluxo da versão adotada e preservar rastreabilidade.
 
-Ainda é necessário decidir se haverá specs-base curadas a partir dos requisitos aprovados ou se cada mudança citará diretamente as fontes canônicas. O repositório contém `schema: spec-driven`, mas não specs nem mudanças. Os comentários de `openspec/config.yaml` devem descrever a obrigatoriedade do processo sem sugerir governança automática. Não presumir versão, comandos ou convenções específicas da CLI: verificar a documentação da release efetivamente selecionada antes de documentá-los.
+Ainda é necessário decidir se haverá specs-base curadas a partir dos requisitos aprovados ou se cada mudança citará diretamente as fontes canônicas. O repositório contém `schema: spec-driven` e a change proposta `2026-10-18-technical-foundation`, mas ainda não há specs-base. Os comentários de `openspec/config.yaml` devem descrever a obrigatoriedade do processo sem sugerir governança automática. Não presumir versão, comandos ou convenções específicas da CLI: verificar a documentação da release efetivamente selecionada antes de documentá-los.
 
 ## 25. Documentação e contexto de agentes
 
@@ -451,9 +449,9 @@ A sequência evita dependências de negócio não aprovadas. Critérios abaixo s
 | 5. Resultados e apuração | Entrada/revisão oficial, auditoria e cálculo 6/3/2/1/0/120 minutos | Etapa 4; PROD-03/04 | tabela de pontuação homologada; recálculo idempotente; correção rastreável |
 | 6. Ranking e histórico | Agregados por rodada, aplicação dos desempates aprovados e detalhes explicativos | Etapa 5 | resultados determinísticos e auditáveis; progresso da apuração claramente apresentado |
 | 7. Administração e suporte | Painel de partidas/resultados, gestão de tickets, trilha de auditoria e controles | Etapa 3; PROD-08/OPS-01 | RBAC e acesso auditado; fluxo de suporte homologado |
-| 8. Estatísticas, badges e experiência | Gráficos, badges, grupos/chaveamento, acessibilidade e UX final | Etapa 6; PROD-06; dados oficiais | métricas reproduzíveis; critérios de badges aprovados; verificação acessível/manual |
+| 8. Estatísticas, badges e experiência | Gráficos, badges, grupos/chaveamento, acessibilidade e UX final | Etapa 6; PROD-06 (pendências 06.5/06.6); dados oficiais | métricas reproduzíveis; critérios de badges aprovados e pendências 06.5/06.6 resolvidas; verificação acessível/manual |
 | 9. Endurecimento e homologação | Testes integrados/E2E, segurança, acessibilidade, desempenho, revisão de privacidade | Etapas anteriores | defeitos críticos resolvidos; critérios de aceite e calendário conferidos por responsável |
-| 10. Execução local e portabilidade documental | Compose local, configuração segura e documentação das fronteiras para portabilidade | TEC-02; OPS-03 para e-mails | execução local validada quando artefatos forem implementados; sem deployment GCP nem promessa de backup/restore |
+| 10. Execução local e portabilidade documental | Compose local, configuração segura e documentação das fronteiras para portabilidade | TEC-02; OPS-03 para e-mails | execução local validada por execução real (o scaffold existe, mas não foi validado); sem deployment GCP nem promessa de backup/restore |
 
 Não estabelecer datas artificiais sem capacidade, responsáveis e prazo aprovados.
 
@@ -461,9 +459,9 @@ Não estabelecer datas artificiais sem capacidade, responsáveis e prazo aprovad
 
 - **Estado do repositório:** o estado de rastreamento é volátil e não constitui decisão arquitetural; consulte Git para o estado atual. A ausência de implementação, configuração local e dados de partidas deve ser reavaliada antes da fundação, não tratada como afirmação permanente.
 
-- **Dados ausentes:** não foram encontrados código de aplicação, Compose/Dockerfiles, manifests, `.env.example`, CI, testes ou dados oficiais de partidas/seleções. Não há decisões arquiteturais formalmente aprovadas registradas por ADR.
+- **Dados ausentes:** na análise de 18/10/2026 não havia código, Compose/Dockerfiles, manifests nem `.env.example`; em 19/10/2026 existem como scaffold. Continuam ausentes CI, testes e dados oficiais de partidas/seleções. ADR-001 registra direções aprovadas pelo solicitante, sem aprovador organizacional identificado nem aprovação da implementação.
 - **Próxima ação recomendada:** resolver pendências de produto/operação antes dos fluxos dependentes e selecionar versões/configuração local antes da fundação. Seguir a revisão em `revisao-arquitetura-multiagentes.md` e o registro canônico de decisões pendentes. Adoção de OpenSpec é obrigatória; convenções de baseline, aprovação e rastreabilidade permanecem pendentes.
 
 ## 28. Escopo desta atualização documental
 
-Esta atualização revisa recomendações arquiteturais e registros documentais. Não implementa funcionalidades, endpoints, telas, migrações, testes ou Compose; não instala dependências, inicializa OpenSpec, altera o schema ou comportamento da configuração OpenSpec, cria recursos de nuvem ou realiza operações destrutivas/em produção. Os comentários explicativos de `openspec/config.yaml` foram alinhados à adoção obrigatória em uma atualização anterior; essa configuração não foi alterada nesta atualização. Compatibilidade de runtime não foi testada.
+Em 19/10/2026, esta atualização registra no ADR-001 as direções arquiteturais aprovadas, harmoniza inicialmente a HU-22 do requisito v3.3 e depois a atualização v3.4 (reverificação do novo endereço, três tentativas e HU-23), além de atualizar o contexto de `openspec/config.yaml` sem mudar seu `schema: spec-driven`. Não implementa funcionalidades, endpoints, telas, migrações, testes ou Compose; não instala dependências, inicializa OpenSpec, cria recursos de nuvem ou realiza operações destrutivas/em produção. Compatibilidade de runtime não foi testada.

@@ -1,6 +1,6 @@
 # Frontend - Next.js/TypeScript
 
-Esta diretoria contém a aplicação frontend desenvolvida com Next.js e TypeScript seguindo a arquitetura definida em `docs/architecture/arquitetura-software.md`.
+Esta pasta contém o scaffold da aplicação Next.js/TypeScript. A direção de funcionalidades em `features/` está registrada no `docs/architecture/decisoes-tecnicas/ADR-001-vsa-monorepo-e-persistencia.md`; organização interna, contratos e segurança da sessão dependem do design das changes aplicáveis.
 
 ## Estrutura
 
