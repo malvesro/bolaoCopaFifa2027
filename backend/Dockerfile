@@ -8,9 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir -e .
+# Instalação não editável: o pyproject declara readme e pacotes (app*),
+# então README.md e app/ precisam existir antes do pip install.
+COPY pyproject.toml README.md ./
+COPY app ./app
+RUN pip install --no-cache-dir .
 
 COPY . .
 
@@ -24,12 +26,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser:appuser /app
-USER appuser
+RUN adduser --disabled-password --gecos "" appuser
 
-# Copy installed packages from builder
+# Copia site-packages e também /usr/local/bin (uvicorn, alembic etc. vivem lá)
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /app .
+COPY --from=builder /usr/local/bin /usr/local/bin
+# --chown: o código copiado deve pertencer ao usuário não-root
+COPY --from=builder --chown=appuser:appuser /app .
+RUN chown appuser:appuser /app
+
+USER appuser
 
 EXPOSE 8000
 

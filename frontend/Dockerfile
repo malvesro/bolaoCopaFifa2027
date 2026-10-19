@@ -1,14 +1,27 @@
-FROM node:18-alpine AS builder
-
+# Base comum: Node 20 LTS (Next 14 exige Node >= 18.17)
+FROM node:20-alpine AS base
 WORKDIR /app
-
 COPY package*.json ./
+
+# Dependências (exige package-lock.json)
+FROM base AS deps
 RUN npm ci
 
+# Desenvolvimento: usado pelo docker-compose (target: dev) com o código montado por volume
+FROM deps AS dev
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY . .
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
+# Build de produção (output standalone)
+FROM deps AS builder
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY . .
 RUN npm run build
 
-FROM node:18-alpine AS runner
+# Produção: imagem final enxuta, usuário não-root
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
