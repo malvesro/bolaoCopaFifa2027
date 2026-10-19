@@ -1,10 +1,10 @@
 # Documento de Requisitos — Bolão Copa do Mundo Feminina da FIFA Brasil 2027™
 
-**Versão:** 3.2
-**Data:** 18/10/2026  
+**Versão:** 3.4
+**Data:** 19/10/2026
 **Analista Responsável:** Analista de Requisitos Sênior / Wayfinder
 
-**Histórico de revisão:** v3.2 (18/10/2026) esclarece a interpretação da pontuação, aplicação do ranking corrente, normalização do nome e visibilidade em reabertura conforme decisões registradas nesta revisão e em `decisoes-pendentes.md`; preserva PROD-02/05. v3.1 (18/10/2026) esclarece a semântica de recepção de requisições na fronteira do corte conforme PROD-01.
+**Histórico de revisão:** v3.4 (19/10/2026) exige nova verificação por código de seis dígitos quando o e-mail local muda, limita a três tentativas de apresentação do código por verificação e esclarece o login Google de conta anteriormente criada e validada cuja identidade Google já esteja vinculada; não resolve o primeiro vínculo por mera coincidência de endereço. v3.3 (19/10/2026) acrescenta a decisão de vincular identidades Google e local pelo e-mail, exigindo a verificação do e-mail da conta local por código numérico de seis dígitos enviado a esse endereço; detalhes de segurança e do fluxo de vínculo ainda abertos estão em `decisoes-pendentes.md`. v3.2 (18/10/2026) esclarece a interpretação da pontuação, aplicação do ranking corrente, normalização do nome e visibilidade em reabertura conforme decisões registradas naquela revisão e em `decisoes-pendentes.md`; preserva PROD-02/05. v3.1 (18/10/2026) esclarece a semântica de recepção de requisições na fronteira do corte conforme PROD-01.
 **Fonte de Referência:** Tabela oficial FIFA.com (Brasil 2027™) + Regras de negócio alinhadas com o cliente  
 
 ---
@@ -182,6 +182,8 @@ O ranking corrente inclui somente pontos e acertos decorrentes de resultados ofi
 - **HU-12:** Como participante, quero alterar minha senha voluntariamente a qualquer momento na tela "Trocar Senha".
 - **HU-13:** Como participante, quero ser orientado sobre boas práticas de senha segura sem bloqueios desnecessários durante os 30 dias do campeonato.
 - **HU-21 (Nova):** Como participante, quero solicitar a recuperação de senha via link seguro enviado ao meu e-mail caso esqueça minhas credenciais de acesso.
+- **HU-22 (v3.3; complementada na v3.4):** Como pessoa que cria ou altera o e-mail de uma conta local, quero verificar o endereço por um código numérico de seis dígitos enviado a esse endereço, com até três tentativas por verificação, para que apenas o endereço verificado possa ser considerado no vínculo por e-mail com uma identidade Google.
+- **HU-23 (v3.4):** Como participante cuja conta já foi criada e validada e possui uma identidade Google vinculada, quero entrar com a autenticação Google dessa identidade, respeitando a aprovação administrativa necessária para participar.
 
 ### Épico 5 — Conduta, Suporte e Transparência
 
@@ -250,6 +252,17 @@ O ranking corrente inclui somente pontos e acertos decorrentes de resultados ofi
 - Tela segura de redefinição de senha com confirmação.
 - Não expor se o e-mail existe ou não no banco por segurança contra enumeração de usuários.
 
+### HU-22 — Verificação do E-mail Local e Vínculo com Conta Google
+- O vínculo entre conta Google e conta local tem o e-mail como referência de correspondência. O e-mail da conta local deve ser verificado por envio de um código **numérico de seis dígitos** ao próprio endereço. Um endereço local ainda não verificado não satisfaz o requisito para vínculo.
+- A verificação do e-mail local não substitui a aprovação administrativa para participação (PROD-07), nem o token único de recuperação de senha com validade de 30 a 60 minutos da HU-21.
+- Quando o endereço de e-mail da conta local for alterado, o **novo endereço** exige nova verificação por código numérico de seis dígitos enviado a ele. A verificação do endereço antigo não valida o novo endereço nem o habilita para vínculo por e-mail. O momento em que a alteração passa a valer para contato, login e vínculos existentes ainda depende de especificação (TEC-01/PROD-07).
+- São permitidas **até três tentativas de apresentação do código por verificação**; uma quarta tentativa não pode validar aquela verificação. Reenvio, emissão de novo código e reinício de tentativas ainda exigem política para impedir contornar o limite, bem como validade, consumo e proteção contra adivinhação/enumeração (TEC-01).
+- A correspondência de e-mail não especifica, por si só, vinculação automática nem comprova o controle de uma identidade já existente. A forma de confirmação do **primeiro vínculo** e os conflitos entre contas dependem de decisão e especificação antes da implementação (TEC-01/PROD-07).
+
+### HU-23 — Acesso Google de Conta Anteriormente Criada e Validada
+- Uma conta anteriormente criada e validada **com identidade Google já vinculada** pode autenticar-se novamente com essa identidade Google, reconhecida pelo identificador estável do provedor (`sub`); não é necessário repetir a verificação do e-mail local inalterado a cada login.
+- Se a conta ainda não foi aprovada pela administração, autenticar-se não libera participação nem privilégios de administrador (PROD-07/08). Um e-mail coincidente sem identidade Google já vinculada é tentativa de primeiro vínculo, **não** login na conta local preexistente; sua confirmação segura permanece pendente (TEC-01).
+
 ---
 
 ## 5. Matriz de Regras Consolidadas
@@ -264,4 +277,5 @@ O ranking corrente inclui somente pontos e acertos decorrentes de resultados ofi
 | **Visibilidade de Concorrentes** | Pública na partida **após o corte de 1h** |
 | **Ordem de Desempate** | 1º 6 pts $\rightarrow$ 2º 3 pts $\rightarrow$ 3º Rodadas anteriores $\rightarrow$ 4º Nome |
 | **Fuso Horário** | Horário de Brasília (BRT / UTC-3) permanente |
-| **Recuperação de Acesso** | E-mail com token seguro de redefinição |
+| **Recuperação de Acesso** | E-mail com token único de redefinição (HU-21) |
+| **Vínculo Google/local** | Correspondência por e-mail; endereço local novo ou alterado exige verificação por código numérico de seis dígitos, com até três tentativas por verificação (HU-22). Identidade Google já vinculada pode autenticar conta validada (HU-23); primeiro vínculo seguro ainda pendente. |

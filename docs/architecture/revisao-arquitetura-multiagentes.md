@@ -48,11 +48,11 @@ Os limites de módulo, o modelo de pastas, o uso de ORM, a estratégia de cálcu
 
 ### 4.1 Domínio, DDD e limites de módulos
 
-**Evidência:** os requisitos cobrem identidade/admissão, calendário e seleções, palpites, resultados, apuração, ranking, suporte e badges. A arquitetura já propõe módulos próximos desses conceitos, mas também inclui `administration` no exemplo de pastas sem linha correspondente na tabela de responsabilidades. A proposta de gamificação fala em depender de métricas de ranking, embora badges devam reconhecer fatos aprovados e não alterar pontos.
+**Evidência:** os requisitos cobrem identidade/admissão, calendário e seleções, palpites, resultados, apuração, ranking, suporte e badges. A arquitetura já propõe módulos próximos desses conceitos, mas, na versão revisada, o exemplo de pastas incluía `administration` sem linha correspondente na tabela de responsabilidades (a pasta não existe no scaffold atual). A proposta de gamificação (PROD-06) não exige métricas do módulo de ranking: seus critérios usam pontos por partida, placares exatos, cobertura de palpites e médias por rodada, e ela afirma independência do ranking. Badges devem reconhecer fatos aprovados e não alterar pontos.
 
 **Risco:** fronteiras apresentadas como contextos autônomos podem criar módulos artificiais, e dependência de badges sobre projeções de ranking pode acoplar regras independentes. “Administração” tende a ser papel/casos de uso autorizados nos módulos donos dos dados, não necessariamente domínio próprio.
 
-**Recomendação:** manter módulos por capacidade de negócio, cada um dono de suas invariantes e dados; coordenar casos de uso por aplicação explícita. Tratar autorização administrativa e auditoria como políticas aplicadas nos casos de uso proprietários; só criar módulo transversal de administração se uma necessidade real exigir. Gamificação permanece fora da implementação automática até aprovação PROD-06; quando aprovada, consumir resultados oficiais/apuração por contrato mínimo, sem depender de ranking salvo critério aprovado que o exija. Não criar agregados ou camadas apenas para refletir a nomenclatura DDD.
+**Recomendação:** manter módulos por capacidade de negócio, cada um dono de suas invariantes e dados; coordenar casos de uso por aplicação explícita. Tratar autorização administrativa e auditoria como políticas aplicadas nos casos de uso proprietários; só criar módulo transversal de administração se uma necessidade real exigir. PROD-06 considerada aprovada em 19/10/2026; a implementação ainda depende de OpenSpec e das lacunas PROD-06.5/06.6. Gamificação consome palpites, calendário/rodadas e pontuação por partida por contrato mínimo, sem depender de ranking. Não criar agregados ou camadas apenas para refletir a nomenclatura DDD.
 
 ### 4.2 Clean Architecture e Vertical Slices
 
@@ -73,9 +73,9 @@ Os limites de módulo, o modelo de pastas, o uso de ORM, a estratégia de cálcu
 
 **Pendências residuais:**
 
-5. **Partidas excepcionais:** adiamento e exclusão de cancelada/anulada têm decisões limitadas; efeitos de cancelamento em contagens/histórico, partidas suspensas/abandonadas/retomadas e badges permanecem sem política aprovada.
+5. **Partidas excepcionais:** adiamento e exclusão de cancelada/anulada têm decisões limitadas; efeitos de cancelamento em contagens/histórico, partidas suspensas/abandonadas/retomadas e seus efeitos em badges (PROD-06.6) permanecem sem política aprovada.
 6. **Corte e concorrência:** permanece por definir o ponto confiável de ingresso, proxy, precisão/associação do timestamp e controles contra falsificação/replay. A decisão de produto determina que a publicação aguarde gravações elegíveis recebidas antes do corte; o mecanismo técnico ainda não está escolhido.
-7. **Apuração e badges:** estado de apuração “definitiva”, autorização de correção e comunicação continuam abertos; PROD-06 também aguarda aprovação. A implementação automática de badges deve continuar bloqueada.
+7. **Apuração e badges:** estado de apuração “definitiva”, autorização de correção e comunicação continuam abertos. A PROD-06 foi considerada aprovada em 19/10/2026; a concessão automática de badges continua bloqueada apenas nas partes que dependem de PROD-06.5, PROD-06.6 e da reabertura de prazo (PROD-02).
 
 **Recomendação:** manter as lacunas no registro canônico e obter decisão humana antes de codificar comportamentos dependentes. Não ajustar requisitos para facilitar implementação nem tratar recomendações arquiteturais como resposta a lacunas de negócio.
 
@@ -137,7 +137,7 @@ Os limites de módulo, o modelo de pastas, o uso de ORM, a estratégia de cálcu
 
 ## 6. Decisões e ações humanas
 
-1. **Produto — partidas excepcionais/badges:** completar consequências de canceladas/anuladas em contagens e histórico, além de suspensas, abandonadas/retomadas em pontuação, ranking, histórico e badges; aprovar PROD-06 separadamente.
+1. **Produto — partidas excepcionais/badges:** completar consequências de canceladas/anuladas em contagens e histórico, além de suspensas, abandonadas/retomadas em pontuação, ranking, histórico e badges; resolver PROD-06.5/06.6 e o efeito da reabertura de prazo (PROD-02) sobre BADGE-01/02/03.
 2. **Técnica — corte:** escolher ponto confiável de ingresso e definir associação/auditoria do timestamp, garantias técnicas para aguardar gravações elegíveis e controles contra replay; testar caminho HTTP/infra real.
 3. **Técnica — ambiente local:** selecionar versões suportadas e decidir forma de Compose, mounts, hot reload, portas, health/readiness, política de migrações e diagnóstico para Windows/WSL/Linux.
 4. **Processo — OpenSpec:** aprovar convenção mínima de baseline/rastreabilidade e registro de aprovação; escolher/confirmar versão antes de documentar comandos.

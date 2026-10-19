@@ -6,13 +6,13 @@ PROD-06 — Especificação de Badges e Gamificação
 | Projeto             | Bolão da Copa do Mundo Feminina da FIFA Brasil 2027                              |
 | Identificador       | PROD-06                                                                          |
 | Versão do documento | 1.0                                                                              |
-| Status              | Proposta revisada — aguardando aprovação do responsável pelo produto             |
+| Status              | Aprovada pelo usuário em 19/10/2026 (aprovador formal não identificado); decisões PROD-06.5 e PROD-06.6 e a reabertura de prazo (PROD-02) seguem abertas |
 | Tipo                | Decisão de produto e especificação funcional                                     |
 | Prioridade          | Média; não bloqueia pontuação ou ranking                                         |
 | Dependências        | Requisitos do bolão v3.2 (18/10/2026), palpites, partidas, resultados oficiais, apuração de pontos |
 | Arquivo sugerido    | `docs/requirements/PROD-06-criterios-badges-gamificacao.md`                      |
 
-> **Importante:** este documento apresenta uma proposta completa e revisada. Os critérios e os valores numéricos somente se tornam regras aprovadas após confirmação do responsável pelo produto. A implementação automática deve permanecer bloqueada até essa aprovação.
+> **Importante:** em 19/10/2026 o usuário declarou que este documento deve ser considerado aprovado (registro em `decisoes-pendentes.md`). A aprovação dos critérios não autoriza implementação: ela segue OpenSpec com aprovação humana das tarefas, e as partes que dependem de PROD-06.5, PROD-06.6 e da reabertura de prazo continuam bloqueadas.
 
 * * *
 
@@ -304,7 +304,7 @@ A concessão não depende de todas as partidas terem terminado ou terem resultad
 
 **Exemplo:** um participante que alcança oito placares exatos recebe a badge, independentemente de sua posição no ranking.
 
-**Observação:** o limite de oito é uma proposta inicial e deve ser aprovado pelo responsável pelo produto antes da implementação.
+**Observação:** o limite de oito foi proposto inicialmente e entra na aprovação registrada em 19/10/2026 (PROD-06.2).
 
 ### 5.3. Família C — Consistência e desempenho
 
@@ -866,7 +866,7 @@ A implementação futura deverá satisfazer, no mínimo, os critérios abaixo.
 
 ------------------------------
 
-As perguntas abaixo devem ser respondidas pelo responsável pelo produto antes da implementação automática.
+Registro de 19/10/2026: o pacote foi considerado aprovado pelo solicitante, exceto PROD-06.5 (estado de resultado definitivo) e PROD-06.6 (partidas canceladas ou anuladas), que seguem abertas, além do efeito da reabertura de prazo (PROD-02), da visibilidade de badges de terceiros e da retenção do histórico. A tabela abaixo preserva as recomendações originais.
 
 | ID         | Decisão                                          | Recomendação proposta                                                                             | Bloqueia                          |
 | ---------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------- |

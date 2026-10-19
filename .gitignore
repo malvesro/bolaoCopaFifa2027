@@ -1,7 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
-/p-lock.yaml
 .env
 .env.local
 .env.development.local
@@ -42,3 +40,6 @@ Thumbs.db
 .roo/
 **/.claude/*.lock
 **/.claude/scheduled_tasks.json
+
+# Preferências locais do Claude Code (modelo por desenvolvedor)
+.claude/settings.local.json

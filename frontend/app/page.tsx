@@ -63,7 +63,7 @@ export default function HomePage() {
               Swagger OpenAPI (http://localhost:8000/docs)
             </Link>
             <Link
-              href="http://localhost:8000/health/live"
+              href="http://localhost:8000/live"
               style={{
                 display: 'inline-block',
                 padding: '0.75rem 1rem',
@@ -74,7 +74,7 @@ export default function HomePage() {
                 fontWeight: 500
               }}
             >
-              Healthcheck (http://localhost:8000/health/live)
+              Healthcheck (http://localhost:8000/live)
             </Link>
           </div>
           <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '1rem' }}>

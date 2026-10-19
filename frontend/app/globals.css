@@ -1,0 +1,6 @@
+/* Estilos globais mínimos. Os estilos de página ainda são inline (scaffold). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

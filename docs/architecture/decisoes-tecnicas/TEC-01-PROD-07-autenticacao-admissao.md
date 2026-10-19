@@ -1,15 +1,17 @@
 # Especificação Técnica: Autenticação Híbrida e Admissão de Participantes (TEC-01 & PROD-07)
 
-**Versão:** 1.0  
-**Data:** 18/10/2026  
-**Status:** Decisão técnica para aprovação  
-**Referência:** Requisitos v3.2 (HU-12, HU-13, HU-21), PROD-07 (Admissão), Mapa de Consulta
+**Versão:** 1.1 (minuta anotada; proposta original de 18/10/2026 preservada para revisão)
+**Data:** 19/10/2026
+**Status:** Minuta técnica NÃO aprovada integralmente. Esquema SQL, estados, JWT/refresh, gatilhos e políticas de exclusão abaixo são apenas exemplos anteriores à decisão de 19/10/2026; **não usar como instruções de implementação**.
+**Referência:** Requisitos v3.4 (HU-12, HU-13, HU-21, HU-22 e HU-23), PROD-07/TEC-01 e [ADR-001](ADR-001-vsa-monorepo-e-persistencia.md).
+
+> **Nota de compatibilidade da minuta:** foi aprovada a regra de que a correspondência de e-mail é referência para o primeiro vínculo Google/local e que o endereço local novo ou alterado deve ser verificado por código numérico de seis dígitos enviado a ele, com até três tentativas por verificação (HU-22). Também foi aprovado o novo login Google da identidade já vinculada à conta validada, identificada por `sub` (HU-23). Isso não aprova vínculo automático, o mecanismo do primeiro vínculo, reenvio/reinício de tentativas, os efeitos da mudança de endereço nem o esquema abaixo. Sessão opaca revogável mantida no servidor é a direção aprovada, em lugar da proposta de JWT/refresh. O exemplo SQL abaixo contém uma inconsistência (`provider_user_id TEXT NOT NULL` e comentário “NULL para local”), unicidade insuficiente para impedir duplicidades, e `users.email` opcional apesar do mínimo de e-mail em PROD-07. A busca apenas por `ACTIVE` não cobre contas preexistentes pendentes/rejeitadas/bloqueadas. A cláusula de soft delete e a afirmação de consentimento implícito não são decisões aprovadas (OPS-01). Resolver estas questões e as pendências TEC-01/PROD-07 em change OpenSpec específica antes de codificar.
 
 ---
 
 ## 1. Contexto e Objetivo
 
-Este documento define o modelo de identidade, autenticação híbrida (Google OAuth e login local), vinculação de contas e máquina de estados de participantes, garantindo segurança, auditabilidade e governança.
+Este documento reúne uma **minuta anterior de modelo** de identidade, autenticação Google e local, vínculo e estados; não garante segurança nem define schema ou políticas aprovadas. As decisões HU-22/23 e as lacunas atualizadas estão no requisito v3.4 e em `docs/requirements/decisoes-pendentes.md`.
 
 ---
 
@@ -202,13 +204,15 @@ CREATE INDEX idx_status_audit_user ON user_status_audit_log(user_id, changed_at 
 ## 8. Considerações de Privacidade e Segurança
 
 - **Dados pessoais minimizados:** não coletar dados fora do escopo (nome, e-mail).
-- **LGPD:** consentimento implícito no cadastro; política de exclusão (soft delete, manter histórico de palpites anonimizado).
-- **Não expor palpites alheios antes do corte:** middleware de autorização valida `user.status == 'ACTIVE'` e `received_at < cutoff` em toda rota de consulta de palpites.
+- **Privacidade:** base legal, retenção e escopo da exclusão/anonimização exigem avaliação própria (OPS-01); esta minuta não aprova consentimento implícito nem soft delete.
+- **Não expor palpites alheios antes do corte:** em consultas de palpites de terceiros, o backend verifica autorização e só divulga após o corte vigente e a conclusão das gravações elegíveis anteriores a ele; durante reabertura, novas leituras alheias ficam ocultas até o novo corte. A condição `received_at < cutoff` aplica-se à elegibilidade de **gravação**, não à leitura (requisitos v3.4, §1.3.3/HU-20). A política de estados `ACTIVE` nesta minuta ainda requer decisão PROD-07.
 - **Princípio do menor privilégio:** endpoints públicos não retornam `user_identities`, apenas `users.id` e `display_name`.
 
 ---
 
-## 9. Checklist de Implementação
+## 9. Checklist original — não autorizado para execução
+
+O checklist a seguir antecede HU-22/23 e ADR-001. Substituir por tarefas da change `openspec/changes/2026-10-19-identity-email-link/` somente após decisões residuais e aprovação humana da change; não executar os itens abaixo como estão.
 
 - [ ] Criar tabelas `users`, `user_identities`, `user_status_audit_log`
 - [ ] Implementar middleware de autenticação JWT + validação de `status`
