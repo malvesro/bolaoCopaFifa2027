@@ -1,0 +1,29 @@
+# CLAUDE.md (modelo): copie para a raiz do projeto como CLAUDE.md e ajuste
+
+## Projeto
+- Descrição: <o que o sistema faz, em uma ou duas frases>
+- Stack: <linguagens, frameworks, banco de dados>
+
+## Comandos
+- Build: <comando>
+- Testes: <comando>
+- Lint: <comando>
+
+## Convenções
+- Idioma de commits e documentação: português do Brasil.
+- Padrão de commits: <ex.: Conventional Commits>
+- Nunca fazer commit direto na branch principal; abrir PR.
+- Nunca incluir segredos, senhas ou tokens no código.
+
+## Uso do Graft (mapa do código)
+- Este repositório usa o Graft. O mapa fica em `graft/`.
+- Antes de editar uma função, verifique o impacto com `graft callers <símbolo>`.
+- Para localizar onde algo está, prefira `graft ask "<pergunta>"` ou `graft map` a varrer arquivos.
+- Após clonar o repositório ou trocar de branch, rode `graft build` se o grafo estiver desatualizado.
+- Não edite manualmente arquivos gerados em `graft/`.
+- Política de versionamento do `graft/`: <definir: versionar páginas Markdown? sim/não>
+
+## Regras para o agente
+- Faça mudanças pequenas e focadas; explique o que mudou e por quê.
+- Rode os testes antes de concluir uma tarefa.
+- Em caso de dúvida sobre requisito, pergunte antes de implementar.
