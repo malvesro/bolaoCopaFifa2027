@@ -2,33 +2,43 @@
 # Aprovações e governança permanecem humanas e manuais.
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+# Restrições que um agente não infere lendo o código.
+context: |
+  Escreva todos os artefatos em Português do Brasil.
+  Fonte normativa: docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md (v3.4; regras v3.2 preservadas).
+  Precedência: requisitos aprovados > decisões de produto > decisões arquiteturais aprovadas > specs OpenSpec > pedidos pontuais > recomendações técnicas.
+  Artefato OpenSpec completo não é aprovação humana nem autorização de implementação.
+  ADR-001 aprova backend/ e frontend/ no mesmo repositório, fatias verticais por caso de uso dentro de módulos por capacidade,
+  domínio proprietário para invariantes e SQLAlchemy síncrono como ponto de partida; detalhes e implementação exigem change e validação.
+  Não duplicar regras críticas (pontuação 6/3/2/1/0, corte de 1 h antes do kickoff,
+  desempates, mata-mata em 120 min) nem presumir fronteiras internas ainda não desenhadas.
+  HU-22: vínculo Google/local por e-mail exige verificação do endereço local novo ou alterado por código
+  numérico de seis dígitos, com até três tentativas por verificação; reenvio/reinício ainda pendentes.
+  HU-23: identidade Google já vinculada pode autenticar novamente conta validada por sub;
+  primeiro vínculo por coincidência de e-mail não é login automático nem substitui aprovação administrativa
+  ou token de recuperação da HU-21.
+  PROD-06 (badges) é tratada como aprovada pelo responsável do produto, mas continuam abertos o estado de resultado
+  definitivo (PROD-06.5), partidas canceladas/anuladas (PROD-06.6) e o efeito da reabertura de prazo sobre badges.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+# Regras por artefato.
+rules:
+  proposal:
+    - Declarar o que está fora de escopo e se há impacto em regra de produto.
+    - Citar requisito, decisão ou pendência de origem (por exemplo HU-xx, PROD-xx).
+  specs:
+    - Escrever requisitos em SHALL/MUST e cenários em GIVEN/WHEN/THEN.
+    - Relacionar cada capacidade aos componentes afetados; não impor nomes de arquivos, portas ou camadas além da direção aprovada no ADR-001.
+    - Não inventar política para situação pendente; registrar como lacuna e pedir decisão.
+  design:
+    - Registrar alternativas e impacto quando houver conflito entre fontes.
+    - Os caminhos citados devem existir no repositório ou ser marcados como a criar.
+  tasks:
+    - Cada tarefa cita requisito de origem, arquivo ou componente e a verificação executável.
+    - Não declarar teste como executado sem executá-lo.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+# Orientação por operação.
+operations:
+  apply:
+    guidance:
+      - Não instalar dependências nem criar recursos de nuvem sem autorização explícita.
+      - Mudanças pequenas e revisáveis; parar e perguntar diante de lacuna ou conflito entre fontes.
