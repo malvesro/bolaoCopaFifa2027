@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-10-21
+skip_specs: true
+x-id: 2026-10-21-openspec-internal-work-exception
+x-title: Exceção de OpenSpec para documentação interna e harness
+x-status: proposed
