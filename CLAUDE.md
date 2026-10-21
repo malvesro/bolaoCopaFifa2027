@@ -29,17 +29,6 @@ Precedência: requisitos aprovados → decisões de produto confirmadas → deci
 
 Faça mudanças pequenas e revisáveis. Consulte documentação oficial correspondente às versões selecionadas; não invente versões, comandos, dependências ou scripts. Cubra regras de domínio, autorização, concorrência, idempotência, ranking e migrações com validação proporcional. Não há aplicação nem comandos de build/teste confirmados no repositório; não declare testes executados sem executá-los. Não crie `AGENTS.md` sem necessidade concreta de compatibilidade identificada.
 
-## Arquitetura de IA e Delegação de Agentes
+## Uso de subagentes
 
-Sempre que uma tarefa complexa for solicitada neste repositório, você deve, primeiramente, verificar se as configurações de agentes em `.agents/skills/` estão criadas e disponíveis. Caso existam, você deve atuar como a interface principal e delegar a execução consultando ou invocando os subagentes especializados listados abaixo:
-
-1. **Decisões de Design/Estrutura:** Invoque `software-architect` para desenhar diagramas e ADRs antes de codificar.
-2. **Quebra de Requisitos:** Acione o `orchestrator` para dividir grandes demandas em tarefas menores.
-3. **Código Backend:** Delegue para `backend-expert` tarefas que envolvam Java e Python.
-4. **Código Frontend:** Delegue para `frontend-expert` tarefas que envolvam Angular e Next.js.
-5. **Revisão de Código:** Submeta alterações para o `code-reviewer` e `quality-critic` antes de consolidar.
-6. **Segurança:** Valide novos endpoints obrigatoriamente com o `security-analyst`.
-7. **Testes:** Acione o `software-tester` para gerar cenários automatizados em Playwright.
-8. **Infraestrutura/Scripts:** Use o `fast-worker` para Docker, Git e CI/CD.
-
-Caso as configurações dos subagentes não estejam presentes na pasta indicada, assuma a execução direta da tarefa utilizando as diretrizes gerais de desenvolvimento deste projeto.
+O Claude Code descobre automaticamente os subagentes definidos em `.claude/agents/`; seus papéis e limites devem permanecer nos respectivos perfis, sem duplicação nesta instrução. Delegue quando a especialização ajudar a tarefa, mantendo coordenação e escopo claros. Requisitos aprovados e decisões humanas prevalecem sobre recomendações dos agentes. Nenhum agente resolve lacunas de produto, aprova mudanças em nome do usuário ou transforma artefatos OpenSpec em autorização de implementação.
