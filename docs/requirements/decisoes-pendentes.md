@@ -94,9 +94,10 @@ Itens decididos registram a decisão informada, a data e as lacunas residuais. I
 
 - **Decisão registrada (A):** um papel de administrador, com privilégios mínimos necessários; não criar papéis administrativos adicionais sem decisão posterior.
 - **Já definido:** participantes comuns não podem consultar palpites alheios antes do corte; a arquitetura aplica essa restrição também a administradores por padrão, sem acesso privilegiado implícito.
-- **Lacuna residual:** conta(s) que receberão o papel, gestão e recuperação do acesso administrativo, e matriz precisa de operações autorizadas; manter auditoria de ações administrativas.
-- **Aprovação registrada:** decisão fornecida pelo usuário em 18/10/2026; aprovador organizacional não identificado.
-- **Status:** Modelo de papel único decidido; detalhes de autorização residual abertos.
+- **Decisão complementar solicitada em 27/10/2026:** para desenvolvimento local, disponibilizar a identidade administrativa `admin`, autenticável pela senha definida em variável de ambiente local não versionada, sem validação de e-mail. A exceção é exclusiva de `ENVIRONMENT=development`, não verifica o endereço para HU-22, não deve ser aceita em outros ambientes e não implica acesso administrativo especial a palpites alheios antes do corte. Sessão local opaca em memória via cookie `HttpOnly`; sessões expiram com logout ou reinício do backend. Esta decisão foi explicitamente confirmada pelo solicitante nesta conversa; aprovador organizacional formal não identificado.
+- **Lacuna residual:** identidade/provisionamento da conta administrativa fora do ambiente local, gestão e recuperação do acesso administrativo, e matriz precisa de operações autorizadas; manter auditoria de ações administrativas.
+- **Aprovação registrada:** decisão de papel único informada em 18/10/2026; exceção local confirmada pelo solicitante em 27/10/2026; aprovador organizacional não identificado.
+- **Status:** Papel único e login administrativo local de desenvolvimento decididos; conta não local e privilégios operacionais detalhados permanecem abertos.
 
 ## 4. Decisões de privacidade e operação
 

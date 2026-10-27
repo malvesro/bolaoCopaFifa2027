@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AdminLogin from '../features/admin-login';
 
 export default function HomePage() {
   return (
@@ -82,6 +83,8 @@ export default function HomePage() {
           </p>
         </section>
       </div>
+
+      <AdminLogin />
 
       <div style={{ textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
         <p>Scaffold inicial criado para Bolão Copa FIFA 2027 • Next.js 14 + TypeScript</p>

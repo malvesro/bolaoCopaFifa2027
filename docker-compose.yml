@@ -17,20 +17,21 @@ services:
         condition: service_healthy
     command: npm run dev
     networks:
-      - bolao-network
+      - frontend-network
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./backend:/app
     environment:
       - PYTHONPATH=/app
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/bolao
       - ENVIRONMENT=development
+      - LOCAL_ADMIN_PASSWORD=${LOCAL_ADMIN_PASSWORD:?Configure LOCAL_ADMIN_PASSWORD in .env for local development}
     depends_on:
       db:
         condition: service_healthy
@@ -42,7 +43,8 @@ services:
       retries: 3
       start_period: 5s
     networks:
-      - bolao-network
+      - frontend-network
+      - backend-network
 
   db:
     image: postgres:16-alpine
@@ -61,11 +63,14 @@ services:
       retries: 5
       start_period: 5s
     networks:
-      - bolao-network
+      - backend-network
 
 volumes:
   postgres_data:
 
 networks:
-  bolao-network:
+  frontend-network:
     driver: bridge
+  backend-network:
+    driver: bridge
+    internal: true

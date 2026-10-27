@@ -33,3 +33,7 @@ Esta pasta contém o scaffold da API FastAPI/Python. A direção aprovada no `do
 - Erros: contrato estável sem revelar detalhes internos
 - Configuração: variáveis não secretas por ambiente; segredos via gerenciador aprovado
 - Observabilidade: logs estruturados com correlation/request ID
+
+## Login administrativo local de desenvolvimento
+
+Com o Docker Compose local (`ENVIRONMENT=development`), crie um arquivo `.env` na raiz do repositório (já ignorado pelo Git) e defina `LOCAL_ADMIN_PASSWORD` com uma senha de desenvolvimento. O Compose exige essa variável; se estiver ausente, a configuração falha, e se estiver vazia o login é rejeitado. Não compartilhe nem versione esse arquivo. A API disponibiliza `/admin/session` para login administrativo local. Use o usuário `admin` e a senha configurada; o e-mail não é verificado nesse fluxo. O backend emite sessão opaca em memória por cookie `HttpOnly`; `DELETE /admin/session` encerra a sessão e reiniciar o backend invalida todas as sessões. O backend deve permanecer em um único processo para esse armazenamento em memória. Esse mecanismo é exclusivo de desenvolvimento local e não deve ser usado em outros ambientes. A sessão apenas autentica a identidade administrativa: não implementa cadastro, aprovação de participantes, nem libera acesso privilegiado a palpites antes do corte.
