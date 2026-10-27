@@ -10,6 +10,16 @@ def setup_function() -> None:
     local_admin._sessions.clear()
 
 
+def test_local_admin_login_rejects_missing_password_configuration(monkeypatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.delenv("LOCAL_ADMIN_PASSWORD", raising=False)
+
+    response = client.post("/admin/session", json={"username": "admin", "password": "anything"})
+
+    assert response.status_code == 401
+    assert not local_admin._sessions
+
+
 def test_local_admin_login_sets_httponly_cookie(monkeypatch) -> None:
     monkeypatch.setenv("ENVIRONMENT", "development")
     monkeypatch.setenv("LOCAL_ADMIN_PASSWORD", "local-test-password")

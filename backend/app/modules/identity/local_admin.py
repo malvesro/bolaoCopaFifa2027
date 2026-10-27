@@ -1,5 +1,6 @@
 import secrets
 from hmac import compare_digest
+from os import getenv
 
 from fastapi import APIRouter, Cookie, HTTPException, Response, status
 from pydantic import BaseModel
@@ -30,8 +31,6 @@ def _is_admin_session(session_id: str | None) -> bool:
 def login(payload: AdminLoginRequest, response: Response) -> None:
     if not _development_enabled():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-
-    from os import getenv
 
     local_admin_password = getenv("LOCAL_ADMIN_PASSWORD", "")
     username_valid = compare_digest(payload.username, _ADMIN_USERNAME)
