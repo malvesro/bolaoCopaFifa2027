@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/caveman/SKILL.md",
       "computedHash": "71b600c88c8d1d36f18c4875db23b53c5d6cb9ba3195e19451d6b1bb67db07c4"
+    },
+    "review-loop": {
+      "source": "2dmurali/review-loop-skill",
+      "sourceType": "github",
+      "skillPath": "review-loop/SKILL.md",
+      "computedHash": "4e42d2cd202322df976ddd70c3c1616a6b4e4722588012319669d61d932edf5f"
     }
   }
 }
