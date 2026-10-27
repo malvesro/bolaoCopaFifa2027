@@ -1,63 +1,81 @@
 ## ADDED Requirements
 
-### Requirement: Verificação de e-mail da identidade local
-O sistema MUST exigir que o endereço de e-mail local novo ou alterado seja verificado mediante código numérico de seis dígitos enviado a esse endereço antes de considerá-lo elegível para vínculo por e-mail com identidade Google; MUST permitir no máximo três apresentações do código por verificação (requisito v3.4, HU-22; TEC-01).
+### Requirement: Cadastro de conta local
+O sistema MUST permitir que uma pessoa solicite cadastro local informando nome, e-mail e credencial de usuário/senha, e MUST exigir confirmação do endereço antes de permitir login local (PROD-07; HU-12/13).
 
-#### Scenario: E-mail local ainda não verificado
-- **GIVEN** uma identidade local cujo e-mail não foi verificado
-- **WHEN** se solicita o vínculo com uma identidade Google pelo e-mail correspondente
-- **THEN** o sistema MUST impedir que esse e-mail local seja considerado verificado para fins do vínculo
+#### Scenario: Solicitação de cadastro
+- **GIVEN** uma pessoa informa os dados mínimos de cadastro e uma credencial local válida
+- **WHEN** envia a solicitação de cadastro
+- **THEN** o sistema MUST registrar a solicitação e iniciar a confirmação do endereço de e-mail sem conceder participação no bolão
 
-#### Scenario: Código enviado ao endereço local
-- **GIVEN** uma solicitação de verificação de e-mail da identidade local
-- **WHEN** o sistema emite o código de verificação
-- **THEN** o código MUST ser numérico, conter seis dígitos e ser enviado ao endereço local a verificar
+#### Scenario: E-mail ainda não confirmado
+- **GIVEN** uma solicitação local cujo endereço ainda não foi confirmado
+- **WHEN** a pessoa tenta autenticar-se com usuário e senha
+- **THEN** o sistema MUST recusar o login e informar que a confirmação do e-mail é necessária sem revelar dados de outras contas
 
-#### Scenario: Novo endereço após mudança de e-mail local
-- **GIVEN** uma conta local cujo endereço anterior foi verificado
-- **WHEN** o endereço de e-mail local for alterado
-- **THEN** o novo endereço MUST exigir um novo código numérico de seis dígitos enviado a ele; a verificação do endereço anterior MUST NOT validar o novo para vínculo por e-mail
+#### Scenario: Login após confirmação
+- **GIVEN** uma conta local com credencial válida e endereço de e-mail confirmado
+- **WHEN** a pessoa autenticar-se com usuário e senha
+- **THEN** o sistema MUST autenticar a conta, mantendo separada a autorização para participar até aprovação administrativa
 
-#### Scenario: Limite por verificação
-- **GIVEN** uma verificação de e-mail local ainda não concluída
-- **WHEN** o código tiver sido apresentado três vezes nessa verificação
-- **THEN** uma quarta apresentação MUST NOT validar aquela verificação; reenvio, eventual novo código e reinício das tentativas dependem de política TEC-01 ainda não aprovada
+### Requirement: Confirmação de e-mail para cadastro local
+O sistema MUST enviar ao endereço informado um mecanismo de confirmação de uso único, vinculado à solicitação correspondente, e MUST aceitar a confirmação somente conforme política de validade, consumo e limite de tentativas aprovada antes da implementação; essa confirmação é distinta da verificação HU-22 para vínculo Google e da recuperação HU-21.
 
-### Requirement: Separação das finalidades de identidade e admissão
-O sistema MUST manter a verificação do e-mail local para vínculo distinta da aprovação administrativa de participante (PROD-07) e da recuperação de senha com token único e validade de 30 a 60 minutos (requisito v3.4, HU-21/22).
+#### Scenario: Confirmação do endereço solicitado
+- **GIVEN** uma solicitação de cadastro local ainda não confirmada
+- **WHEN** a pessoa apresenta um mecanismo válido emitido para essa solicitação
+- **THEN** o sistema MUST confirmar somente o endereço associado à solicitação e MUST impedir a reutilização do mecanismo consumido
 
-#### Scenario: E-mail verificado sem aprovação administrativa
-- **GIVEN** uma identidade local com e-mail verificado
-- **WHEN** a solicitação de participação ainda não tiver aprovação administrativa
-- **THEN** a verificação do endereço MUST NOT ser tratada como autorização de participação
+#### Scenario: Mecanismo expirado ou inválido
+- **GIVEN** uma solicitação de cadastro local não confirmada
+- **WHEN** a pessoa apresenta um mecanismo expirado, inválido ou associado a outra solicitação
+- **THEN** o sistema MUST manter o endereço não confirmado e MUST NOT autenticar a conta
 
-#### Scenario: Recuperação de senha independente
-- **GIVEN** uma identidade local com e-mail verificado
-- **WHEN** uma pessoa solicitar redefinição de senha esquecida
-- **THEN** o sistema MUST aplicar o fluxo próprio da HU-21 e MUST NOT tratar o código de verificação do e-mail como token de recuperação
+### Requirement: Aprovação administrativa da participação
+O sistema MUST exigir aprovação de uma conta administrativa para liberar a participação dos demais usuários; confirmação de e-mail ou autenticação local não substituem essa aprovação (PROD-07/08).
 
-### Requirement: Correspondência para vínculo Google/local
-O sistema MUST usar a correspondência de e-mail como referência para o primeiro vínculo Google/local, preservando a identificação de uma identidade Google já vinculada por seu `sub` (requisito v3.4, HU-22/23; TEC-01). A forma de confirmar o primeiro vínculo com uma conta preexistente e tratar conflito de identidades depende de decisão registrada antes da implementação.
+#### Scenario: Conta confirmada aguardando aprovação
+- **GIVEN** uma conta local com e-mail confirmado e ainda não aprovada
+- **WHEN** a pessoa autentica-se
+- **THEN** o sistema MAY permitir acesso restrito à própria conta, mas MUST NOT permitir palpites, ranking ou demais funções de participante
 
-#### Scenario: Identidade Google já conhecida
-- **GIVEN** uma identidade Google previamente reconhecida por seu `sub`
-- **WHEN** seu e-mail apresentado diferir daquele usado em um acesso anterior
-- **THEN** o sistema MUST NOT criar outra identidade Google apenas por causa da mudança de e-mail
+#### Scenario: Aprovação por administrador
+- **GIVEN** uma solicitação de participação pendente
+- **WHEN** a conta administrativa autorizada aprova a solicitação
+- **THEN** o sistema MUST liberar as funções de participante e registrar a ação administrativa para auditoria
 
-#### Scenario: Correspondência sem prova de vínculo preexistente
+#### Scenario: Rejeição por administrador
+- **GIVEN** uma solicitação de participação pendente
+- **WHEN** a conta administrativa autorizada rejeita a solicitação
+- **THEN** o sistema MUST manter bloqueadas as funções de participante e registrar a ação administrativa para auditoria
+
+### Requirement: Conta administrativa inicial provisionada com controle
+O sistema MUST disponibilizar uma conta administrativa inicial por setup controlado, com nome/identificador e e-mail fornecidos na configuração, sem credencial fixa de produção. No desenvolvimento local, a conta administrativa MUST permitir autenticação sem validação de e-mail usando uma senha configurada localmente fora do controle de versão; essa exceção MUST ser restrita ao ambiente local. Credenciais MUST NOT ser embutidas em imagens, logs ou configurações de produção.
+
+#### Scenario: Provisionamento e login administrativo local
+- **GIVEN** o setup de desenvolvimento local provisiona a conta administrativa inicial com identificador e e-mail configurados e a senha está definida em variável de ambiente local
+- **WHEN** a pessoa administradora autentica-se usando essa senha
+- **THEN** o sistema MUST permitir o acesso administrativo sem exigir validação do e-mail e MUST NOT aceitar outro mecanismo baseado em senha para essa conta local inicial
+
+#### Scenario: Provisionamento fora do ambiente local
+- **GIVEN** um setup executado em ambiente diferente do desenvolvimento local
+- **WHEN** a conta administrativa inicial é provisionada
+- **THEN** o sistema MUST NOT usar senha padrão embutida e MUST obter a credencial por mecanismo de configuração seguro
+
+#### Scenario: Aprovação de participantes pela conta administrativa
+- **GIVEN** uma solicitação de participação pendente
+- **WHEN** a conta administrativa inicial autenticada e autorizada a revisa
+- **THEN** o sistema MUST permitir aprovar ou rejeitar a solicitação e MUST auditar a decisão
+
+### Requirement: Integração Google opcional e separada
+A autenticação e o vínculo com Google são opcionais para a primeira entrega de cadastro local e MUST NOT ser pré-requisito para solicitar cadastro, confirmar e-mail, autenticar com usuário/senha ou obter aprovação administrativa. Os comportamentos HU-22/23 permanecem aplicáveis caso a integração Google seja implementada futuramente.
+
+#### Scenario: Fluxo local sem Google
+- **GIVEN** a integração Google não está habilitada
+- **WHEN** uma pessoa solicita cadastro, confirma seu e-mail ou autentica-se localmente
+- **THEN** o sistema MUST permitir o fluxo local sem exigir identidade Google
+
+#### Scenario: Primeiro vínculo Google por coincidência de e-mail
 - **GIVEN** uma identidade Google não vinculada e uma conta local preexistente com o mesmo e-mail
 - **WHEN** houver correspondência de endereço
-- **THEN** o sistema MUST NOT conceder acesso à conta preexistente somente com base na coincidência de texto do e-mail; a prova de controle e o fluxo para concluir o vínculo permanecem pendentes de decisão TEC-01
-
-### Requirement: Retorno com identidade Google já vinculada
-O sistema MUST permitir autenticação via Google de uma conta anteriormente criada e validada quando a identidade Google apresentada já estiver vinculada à conta e for reconhecida por seu `sub` (requisito v3.4, HU-23). A autenticação MUST NOT dispensar aprovação administrativa para participação (PROD-07).
-
-#### Scenario: Novo login com identidade Google já vinculada
-- **GIVEN** uma conta anteriormente criada e validada e uma identidade Google já vinculada a ela
-- **WHEN** a pessoa autenticar-se novamente com a identidade Google reconhecida por seu `sub`
-- **THEN** o sistema MUST permitir autenticação nessa conta sem exigir nova verificação do e-mail local inalterado a cada acesso, mantendo o gate de aprovação administrativa para participação
-
-#### Scenario: Mesmo e-mail, identidade Google não vinculada
-- **GIVEN** uma conta local preexistente e uma identidade Google ainda não vinculada à conta
-- **WHEN** o e-mail apresentado pela identidade Google coincidir com o e-mail da conta local
-- **THEN** o sistema MUST NOT tratar essa coincidência como retorno de identidade já vinculada; o primeiro vínculo exige fluxo seguro ainda pendente de decisão TEC-01
+- **THEN** o sistema MUST NOT conceder acesso à conta preexistente somente com base na coincidência de e-mail; qualquer primeiro vínculo futuro deve respeitar HU-22/23 e decisão TEC-01 aprovada
