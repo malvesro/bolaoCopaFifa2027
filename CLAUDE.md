@@ -4,7 +4,46 @@
 
 Este repositório prepara um bolão web para um grupo único da Copa do Mundo Feminina da FIFA Brasil 2027. A fonte normativa do produto é [`docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md`](docs/requirements/requisitos-bolao-copa-mundo-feminina-2027.md), v3.4 (19/10/2026). Consulte os documentos especializados antes de decidir ou alterar a área correspondente; links aqui são referências, não conteúdo carregado automaticamente.
 
-Precedência: requisitos aprovados → decisões de produto confirmadas → decisões arquiteturais formalmente aprovadas → especificações OpenSpec aprovadas dentro desses limites → solicitações pontuais compatíveis → recomendações técnicas. Solicitação pontual ou artefato OpenSpec completo não altera regra nem substitui aprovação humana. Em conflito ou lacuna, registre fontes, alternativas e impacto e peça decisão antes de implementar comportamento dependente.
+## 🔄 Protocolo de Automação de Ciclo &amp; Estado Persistente (`STATE.md`)
+
+Como a janela de contexto é efêmera e passa por compacção automática (`/compact`), o arquivo `STATE.md` na raiz do repositório é sua **âncora cognitiva primária e memória persistente em disco**. Você deve seguir rigorosamente o ciclo de leitura e escrita abaixo em TODOS os turnos de trabalho. O documento STATE.md deve seguir o conteúdo e formato do  template STATE-template.md.
+
+Todo LOOP (engineering loop) deve ser executado com a skill review-loop para revisão.
+
+### 1. Leitura &amp; Reidratação (Início de Cada Turno / Pós-Compacção)
+
+Antes de executar qualquer tarefa ou criar código com qualquer agente ou subagente:
+
+1. **Leia obrigatoriamente** o arquivo [`docs/STATE.md`](docs/STATE.md).
+2. Reidrate sua consciência situacional consultando:
+   - O **Objetivo Global** e a **Zona Proibida (Escopo Negativo)**.
+   - O estado atual da **Fila de Tarefas** e a próxima tarefa marcada como em andamento `[/]`.
+   - O histórico de **Tentativas Descartadas** para nunca repetir estratégias que já falharam.
+3. Se o status global no `STATE.md` estiver como `BLOQUEADO_HUMANO` ou `CONCLUIDO`, interrompa a execução e reporte a situação ao usuário.
+
+### 2. Regras de Execução Durante o Turno
+
+- Trabalhe **exclusivamente** na tarefa pendente selecionada no `STATE.md`.
+- Respeite rigorosamente as restrições do Escopo Negativo (ex.: é proibido alterar arquivos de teste para forçar aprovação).
+- Exija verificação determinística (ex.: execução de `npm test`, `pytest` ou linter com código de saída 0) antes de considerar qualquer alteração concluída.
+
+### 3. Atualização Append-Only &amp; Persistência (Fim do Turno)
+
+Antes de concluir sua resposta no turno ou acionar a validação do `/goal` / `Stop Hook`:
+
+1. **Preservação do Histórico (Append-Only):** NUNCA apague ou sobrescreva entradas antigas no registro de execuções. A seção `## 📜 Log do Histórico (Append-Only)` deve receber novas entradas exclusivamente via **acréscimo de novas linhas ao final**.
+2. Anexe a nova entrada contendo:
+   - `| [Data/Hora] | Turno N | [Sucesso/Falha] | Ação executada e resultado dos testes determinísticos |`
+3. Atualize o cabeçalho de estado e a lista de tarefas:
+   - Altere a tarefa atual de `[/]` para `[x]` **somente se** a verificação determinística retornou código de saída 0.
+   - Atualize os campos `Última Atualização` e `Próximo Passo Imediato`.
+
+### 4. Trava de Segurança contra Loops Infinitos (Circuit Breaker)
+
+- Se o histórico no `STATE.md` registrar que a **mesma falha ou erro persistiu por 3 turnos consecutivos**:
+  1. Interrompa imediatamente modificações automatizadas de código.
+  2. Altere o status global no `STATE.md` para `BLOQUEADO_HUMANO`.
+  3. Registre no arquivo a causa raiz identificada e as 3 hipóteses descartadas, solicitando orientação do desenvolvedor.
 
 ## Direção e limites essenciais
 
